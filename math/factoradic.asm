@@ -99,11 +99,8 @@ Start:	push -128 ; test range [-127,126]
 .fail:	mov ebx,"FAIL"
 .pass:	pop rax
 
-mov [result],ebx
-invoke WriteConsoleA,<invoke GetStdHandle,STD_OUTPUT_HANDLE>,message,message.bytes,0,0
-
-
-;	invoke	MessageBox,HWND_DESKTOP,rbx,"Factoradic",MB_OK
+	mov [result],ebx
+	invoke WriteConsoleA,<invoke GetStdHandle,STD_OUTPUT_HANDLE>,message,message.bytes,0,0
 	invoke	ExitProcess,0
 .END Start
 END IF;____TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
