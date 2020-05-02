@@ -1,0 +1,97 @@
+
+; 2-1 Manipulating Rightmost Bits
+;--------------------------------
+
+; reset the right-most one bit, or test if power of two
+macro Bit.1.Reset.Right reg1,reg0 {
+    lea reg1,[reg0-1]
+    and reg1,reg0
+}
+; set the right-most zero bit
+macro Bit.0.Set.Right reg1,reg0 {
+    lea reg1,[reg0+1]
+    or reg1,reg0
+}
+; sets the ZF if number of form 2^n - 1
+macro PowerOfTwo.Minus1 reg1,reg0 {
+    lea reg1,[reg0+1]
+    and reg1,reg0
+}
+; get mask of right-most one bit only
+macro Bit.1.Mask.Right reg1,reg0 {
+    mov reg1,reg0
+    neg reg1 ; not|inc, dec|not
+    and reg1,reg0
+}
+; get mask of right-most zero bit only
+macro Bit.0.Mask.Right reg1,reg0 {
+    lea reg1,[reg0+1]
+    not reg0
+    and reg1,reg0
+}
+; get mask of right-most zero bits
+macro Bits.0.Mask.Right reg1,reg0 {
+; (not x) and (x-1)
+    lea reg1,[reg0-1]
+    not reg0
+    and reg1,reg0
+; not (x or (neg x))
+;    mov reg1,reg0
+;    neg reg1 ; not|inc, dec|not
+;    or reg1,reg0
+;    not reg1
+; (x and (neg x))-1
+;    mov reg1,reg0
+;    neg reg1 ; not|inc, dec|not
+;    and reg1,reg0
+;    dec reg1
+}
+; get mask of right-most zero bits, including first set bit
+macro Bits.0.Mask.Right.1 reg1,reg0 {
+    lea reg1,[reg0-1]
+    xor reg1,reg0
+}
+; zero mask for right one bits
+macro Bits.1.Mask.Right reg1,reg0 {
+    lea reg1,[reg0+1]
+    not reg0
+    or reg1,reg0
+}
+; one mask for right one bits, including first zero bit
+macro Bits.1.Mask.Right.0 reg1,reg0 {
+    lea reg1,[reg0+1]
+    xor reg1,reg0
+}
+;  right-propagate the rightmost 1-bit, 01011000 -> 01011111
+macro Bits.1.Propagate.Right reg1,reg0 {
+    lea reg1,[reg0-1]
+    or reg1,reg0
+}
+;  right-propagate the rightmost 1-bit, 01011000 -> 01011111
+macro Bits.1.Group.Reset.Right reg1,reg0 {
+    lea reg1,[reg0-1]
+    or reg1,reg0
+    inc reg1
+    and reg1,reg0
+}
+
+
+
+macro ntz reg1,reg0 {
+    bsf reg1,reg0
+}
+macro nlz reg1,reg0 {
+    bsr reg1,reg0
+}
+
+macro Bits.Group.Next.Right reg1,reg0 {
+    mov reg1,reg0
+    neg reg1 ; not|inc, dec|not
+    and reg1,reg0 ; s
+    add reg1,reg0 ; r
+bsf rcx,reg0
+add cl,2
+    xor reg0,reg1
+shr reg0,cl
+    or reg1,reg0
+}

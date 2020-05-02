@@ -1,0 +1,101 @@
+
+; 2-2 Addition Combined with Logical Operations
+;----------------------------------------------
+; a.
+    neg x                       not x
+                                inc x
+; b.
+    neg x                       dec x
+                                not x
+; c.
+    not x                       neg x
+                                dec x
+; d.
+    inc x                       not x
+                                neg x
+; e.
+    dec x                       neg x
+                                not x
+; f. (dual of j)
+    add x,y                     not y
+                                sub x,y
+                                dec x
+; g.
+    add x,y                     mov z,x
+                                and x,y         ; carries
+                                xor z,y         ; carryless add
+                                lea z,[2*x+z]
+; h.
+    add x,y                     mov z,x
+                                and x,y
+                                or z,y
+                                add z,x
+; i.
+    add x,y                     mov z,x
+                                xor x,y
+                                or z,y
+                                add z,z
+                                sub z,x
+; j. (dual of f)
+    sub x,y                     not y
+                                add x,y
+                                inc x
+; k.
+    sub x,y                     mov z,x
+                                not x
+                                and x,y
+                                xor z,y
+                                add x,x
+                                sub z,x
+; l.
+    sub x,y                     mov z,x
+                                not x
+                                and x,y
+                                not y
+                                and z,y
+                                sub z,x
+; m.
+    sub x,y                     mov z,y
+                                not z
+                                and z,x
+                                add z,z
+                                xor x,y
+                                sub z,x
+; n.
+    xor x,y                     mov z,x
+                                and x,y
+                                or z,y
+                                sub z,x
+; o.
+    not y                       or x,y
+    and x,y                     sub x,y
+; p.
+    not y                       and y,x
+    and x,y                     sub x,y
+; q.
+    sub x,y                     sub y,x
+    not x                       dec y
+; r.
+    sub x,y                     not x
+    not x                       add x,y
+; s. (bit equivalence)
+    xor x,y                     mov z,x
+    not x                       and z,y
+                                or x,y
+                                sub z,x
+                                not z
+; t.
+    xor x,y                     mov z,x
+    not x                       and z,y
+                                or x,y
+                                not x
+                                add z,x
+; u.
+    or x,y                      not y
+                                and x,y
+                                not y
+                                add x,y
+; v.
+    and x,y                     not x
+                                or y,x
+                                sub y,x
