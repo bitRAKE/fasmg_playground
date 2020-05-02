@@ -73,10 +73,10 @@ pop rax
         push rcx		; hInstance
         push rcx		; hMenu
         push rcx		; hWndParent
-        push 720		; nHeight
-        push 1280		; nWidth
-        push 10			; y
-        push 10			; x
+        push 2160		; nHeight
+        push 3840		; nWidth
+        push 0			; y
+        push 0			; x
 	sub rsp,8*4
 
 ;	xor ecx,ecx		; lpAddress
@@ -143,11 +143,8 @@ MainLoop:
 	call [timeGetTime]
 	sub eax,edi		; currentTime = time - beginTime
 
-push rax
-fild dword [rsp]
-fstp dword [rsp]
-pop rax
-call [glTexCoord1f] ; glTexCoord1fv ?
+	cvtsi2ss xmm0,eax
+	call [glTexCoord1f]
 
 	push 1
 	push 1
