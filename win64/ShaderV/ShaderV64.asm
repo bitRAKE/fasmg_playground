@@ -65,7 +65,6 @@ CreateShader:
 	retn
 
 
-
 ENTRY $
 pop rax
 	xor ecx,ecx
@@ -170,95 +169,93 @@ MainLoop:
 
 	xor ecx,ecx
 	call [ExitProcess]
+	int3
 
+_gdi32 db 'gdi32',0
+_ChoosePixelFormat db 0,0,'ChoosePixelFormat',0
+_SetPixelFormat db 0,0,'SetPixelFormat',0
+_SwapBuffers db 0,0,'SwapBuffers',0
 
-POSTPONE
+_kernel32 db 'kernel32',0
+_CloseHandle db 0,0,'CloseHandle',0
+_CreateFile db 0,0,'CreateFileA',0
+_ExitProcess db 0,0,'ExitProcess',0
+_GetFileSize db 0,0,'GetFileSize',0
+_ReadFile db 0,0,'ReadFile',0
+_Sleep db 0,0,'Sleep',0
+_VirtualAlloc db 0,0,'VirtualAlloc',0
 
-	_gdi32 db 'gdi32',0
-	_ChoosePixelFormat db 0,0,'ChoosePixelFormat',0
-	_SetPixelFormat db 0,0,'SetPixelFormat',0
-	_SwapBuffers db 0,0,'SwapBuffers',0
+_opengl32 db 'opengl32',0
+_glRecti db 0,0,'glRecti',0
+_glTexCoord1f db 0,0,'glTexCoord1f',0
+_wglCreateContext db 0,0,'wglCreateContext',0
+_wglGetProcAddress db 0,0,'wglGetProcAddress',0
+_wglMakeCurrent db 0,0,'wglMakeCurrent',0
 
-	_kernel32 db 'kernel32',0
-	_CloseHandle db 0,0,'CloseHandle',0
-	_CreateFile db 0,0,'CreateFileA',0
-	_ExitProcess db 0,0,'ExitProcess',0
-	_GetFileSize db 0,0,'GetFileSize',0
-	_ReadFile db 0,0,'ReadFile',0
-	_Sleep db 0,0,'Sleep',0
-	_VirtualAlloc db 0,0,'VirtualAlloc',0
+_glCreateShaderProgramv db 'glCreateShaderProgramv',0 ; 4.1
+_glDeleteProgram db 'glDeleteProgram',0 ; 2.0
+_glUseProgram db 'glUseProgram',0 ; 2.0
 
-	_opengl32 db 'opengl32',0
-	_glRecti db 0,0,'glRecti',0
-	_glTexCoord1f db 0,0,'glTexCoord1f',0
-	_wglCreateContext db 0,0,'wglCreateContext',0
-	_wglGetProcAddress db 0,0,'wglGetProcAddress',0
-	_wglMakeCurrent db 0,0,'wglMakeCurrent',0
+_user32 db 'user32',0
+_CreateWindowEx db 0,0,'CreateWindowExA',0
+_GetAsyncKeyState db 0,0,'GetAsyncKeyState',0
+_GetDC db 0,0,'GetDC',0
+_DispatchMessage db 0,0,'DispatchMessageA',0
+_MessageBox db 0,0,'MessageBoxA',0
+_PeekMessage db 0,0,'PeekMessageA',0
+_SetProcessDPIAware db 0,0,'SetProcessDPIAware',0
 
-	_glCreateShaderProgramv db 'glCreateShaderProgramv',0 ; 4.1
-	_glDeleteProgram db 'glDeleteProgram',0 ; 2.0
-	_glUseProgram db 'glUseProgram',0 ; 2.0
+_winmm db 'winmm',0
+_timeBeginPeriod db 0,0,'timeBeginPeriod',0
+_timeGetTime db 0,0,'timeGetTime',0
 
-	_user32 db 'user32',0
-	_CreateWindowEx db 0,0,'CreateWindowExA',0
-	_GetAsyncKeyState db 0,0,'GetAsyncKeyState',0
-	_GetDC db 0,0,'GetDC',0
-	_DispatchMessage db 0,0,'DispatchMessageA',0
-	_MessageBox db 0,0,'MessageBoxA',0
-	_PeekMessage db 0,0,'PeekMessageA',0
-	_SetProcessDPIAware db 0,0,'SetProcessDPIAware',0
+_static db 'static',0
+ShaderFileName db 'ShaderV.glsl',0
 
-	_winmm db 'winmm',0
-	_timeBeginPeriod db 0,0,'timeBeginPeriod',0
-	_timeGetTime db 0,0,'timeGetTime',0
-
-	_static db 'static',0
-	ShaderFileName db 'ShaderV.glsl',0
-
-	align 8
-	DATA IMPORT ; section '.idata' import data readable writeable
-		dd 0,0,0,RVA _gdi32,RVA gdi32_table
-		dd 0,0,0,RVA _kernel32,RVA kernel32_table
-		dd 0,0,0,RVA _opengl32,RVA opengl32_table
-		dd 0,0,0,RVA _user32,RVA user32_table
-		dd 0,0,0,RVA _winmm,RVA winmm_table
-		dd 0,0,0,0,0
-	align 8
-	gdi32_table:
-		ChoosePixelFormat dq RVA _ChoosePixelFormat
-		SetPixelFormat dq RVA _SetPixelFormat
-		SwapBuffers dq RVA _SwapBuffers
-		dq 0
-	kernel32_table:
-		CloseHandle dq RVA _CloseHandle
-		CreateFile dq RVA _CreateFile
-		ExitProcess dq RVA _ExitProcess
-		GetFileSize dq RVA _GetFileSize
-		ReadFile dq RVA _ReadFile
-		Sleep dq RVA _Sleep
-		VirtualAlloc dq RVA _VirtualAlloc
-		dq 0
-	opengl32_table:
-		glRecti dq RVA _glRecti
-		glTexCoord1f dq RVA _glTexCoord1f
-		wglCreateContext dq RVA _wglCreateContext
-		wglGetProcAddress dq RVA _wglGetProcAddress
-		wglMakeCurrent dq RVA _wglMakeCurrent
-		dq 0
-	user32_table:
-		CreateWindowEx dq RVA _CreateWindowEx
-		GetAsyncKeyState dq RVA _GetAsyncKeyState
-		GetDC dq RVA _GetDC
-		DispatchMessage dq RVA _DispatchMessage
-		MessageBox dq RVA _MessageBox
-		PeekMessage dq RVA _PeekMessage
-		SetProcessDPIAware dq RVA _SetProcessDPIAware
-		dq 0
-	winmm_table:
-		timeBeginPeriod dq RVA _timeBeginPeriod
-		timeGetTime dq RVA _timeGetTime
-		dq 0
-	END DATA
+align 8
+DATA IMPORT ; section '.idata' import data readable writeable
+	dd 0,0,0,RVA _gdi32,RVA gdi32_table
+	dd 0,0,0,RVA _kernel32,RVA kernel32_table
+	dd 0,0,0,RVA _opengl32,RVA opengl32_table
+	dd 0,0,0,RVA _user32,RVA user32_table
+	dd 0,0,0,RVA _winmm,RVA winmm_table
+	dd 0,0,0,0,0
+align 8
+gdi32_table:
+	ChoosePixelFormat dq RVA _ChoosePixelFormat
+	SetPixelFormat dq RVA _SetPixelFormat
+	SwapBuffers dq RVA _SwapBuffers
+	dq 0
+kernel32_table:
+	CloseHandle dq RVA _CloseHandle
+	CreateFile dq RVA _CreateFile
+	ExitProcess dq RVA _ExitProcess
+	GetFileSize dq RVA _GetFileSize
+	ReadFile dq RVA _ReadFile
+	Sleep dq RVA _Sleep
+	VirtualAlloc dq RVA _VirtualAlloc
+	dq 0
+opengl32_table:
+	glRecti dq RVA _glRecti
+	glTexCoord1f dq RVA _glTexCoord1f
+	wglCreateContext dq RVA _wglCreateContext
+	wglGetProcAddress dq RVA _wglGetProcAddress
+	wglMakeCurrent dq RVA _wglMakeCurrent
+	dq 0
+user32_table:
+	CreateWindowEx dq RVA _CreateWindowEx
+	GetAsyncKeyState dq RVA _GetAsyncKeyState
+	GetDC dq RVA _GetDC
+	DispatchMessage dq RVA _DispatchMessage
+	MessageBox dq RVA _MessageBox
+	PeekMessage dq RVA _PeekMessage
+	SetProcessDPIAware dq RVA _SetProcessDPIAware
+	dq 0
+winmm_table:
+	timeBeginPeriod dq RVA _timeBeginPeriod
+	timeGetTime dq RVA _timeGetTime
+	dq 0
+END DATA
 
 glCreateShaderProgramv dq 0
 glDeleteProgram dq 0
@@ -266,7 +263,6 @@ glUseProgram dq 0
 
 Shader dq 0
 ShaderCode dq 0
-END POSTPONE
 
 
 BytesRead:
@@ -275,8 +271,3 @@ PixelFormatDesc:
     dd 0
     dd 0x00000021 ; PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER
     db 32 dup 0
-
-;SECTION '.RELOC' FIXUPS DATA READABLE DISCARDABLE
-; CTRL + 'S'	reload shader & reset time
-; CTRL + 'Q'	quit
-; CTRL + 'T'	reset time *TODO*

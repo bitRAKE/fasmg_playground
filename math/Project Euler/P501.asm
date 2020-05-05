@@ -78,7 +78,7 @@ PSTART=2
 RSTART=0
 PRIME_LIMIT = (TENv6+7)/8 ; 222814
 end if
-include 'prime_sieve.asm' ; PRIME_LIMIT data created where included
+include 'prime_sieve.inc' ; PRIME_LIMIT data created where included
 include 'multi_limb.asm'
 
 .CODE ; .CODE ; .CODE ; .CODE ; .CODE ; .CODE ; .CODE ; .CODE ; .CODE ; .CODE ;
