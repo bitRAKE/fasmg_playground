@@ -33,16 +33,32 @@ POSTPONE
 END POSTPONE
 
 
+; Use 64-bit registers globally and down-translate when beneficial: high bits
+; are cleared in all write cases of reg32 ; otherwise, use 'low' as further
+; indication of uneffected high bits on write for 16-/8-bit cases.
+iterate <reg,rlow>, ax,al, cx,cl, dx,dl, bx,bl, sp,spl, bp,bpl, si,sil, di,dil
+define reg32.r#reg? e#reg
+define reg16low.r#reg? reg
+define reg8low.r#reg? rlow
+end iterate
+repeat 8, i:8
+define reg32.r#i? r#i#d
+define reg16low.r#i? r#i#w
+define reg8low.r#i? r#i#b
+end repeat
+
+
 macro __DATA ; empty
 end macro
 
 
 macro SOLUTION template,parameters&
-; limitations: RBP and RAX cannot be passed as a parameter/template
-	Get100ns
-	sub [rsp],rax ; -delta
-	pop rax
-	neg rax
+; limitations: RBP cannot be passed as a parameter/template
+	Get100ns rbp
+	sub [rsp],rbp ; -delta
+	pop rbp
+	neg rbp
+	; no reason to grab this much stack, but RBP is back on that stack
 	enter 2048,0
 	and spl,-64
 
@@ -51,14 +67,14 @@ macro SOLUTION template,parameters&
 		mov rax,pram
 		mov [rsp+8*%],rax
 	end iterate
-	pop rcx ; alignment fix
+	pop rax ; alignment fix
 	call plat
 	db template,0
 plat:	; print time in ms
-	sub rsp,8*4
-	cvtsi2sd xmm0,rax
+	cvtsi2sd xmm0,qword [rbp]
 	mulsd xmm0,[One_10v4] ; / 10^4
 	lea rcx,[TimeDisplay]
+	sub rsp,8*4
 	call [_printf_p]
 	add rsp,8*4
 
@@ -71,22 +87,22 @@ plat:	; print time in ms
 	leave
 end macro
 
-macro Get100ns ; use KUSER_SHARED_DATA.InterruptTime
+macro Get100ns reg=RAX ; use KUSER_SHARED_DATA.InterruptTime
 local atom
-atom:	mov rax,[0x7FFE0008]
-	ror rax,32
-	cmp [0x7FFE0010],eax
+atom:	mov reg,[0x7FFE0008]
+	ror reg,32
+	cmp [0x7FFE0010],reg32.reg
 	jnz atom
-	ror rax,32
+	ror reg,32
 end macro
 
 align 16
 One_10v4: dq 0.0001,0.0001,0.0001,0.0001 ; convert 100 ns -> ms
-TimeDisplay db 13,10,"Problem took: %f ms",13,10,0
+TimeDisplay db 13,10,"Problem time: %f ms",13,10,0
 
 ENTRY $ ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY
-	Get100ns
-	push rax ; start timer
+	Get100ns rbp
+	push rbp ; start timer
 
 	PROBLEM ; must use SOLUTION at end
 

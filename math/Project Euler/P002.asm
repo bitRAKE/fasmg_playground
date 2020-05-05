@@ -13,9 +13,9 @@ _odd:	xadd ecx,edx
 	cmp ecx,4_000_000
 	jc _0
 
-	SOLUTION "Problem 2: %d", rbx
+	SOLUTION "Problem 2: %lld", rbx
 end macro
-INCLUDE "support.win64.inc"
+INCLUDE ".\support\win64.inc"
 
 ; I estimate that I had written about 3 million lines
 ; of assembler code in my whole life. Now, code only

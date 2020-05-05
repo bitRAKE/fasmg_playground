@@ -29,10 +29,10 @@ try_this_prime:
 	jnc try_this_prime
 prime_exceeds_table:
 	cmovnc rsi,rax
-	SOLUTION "Problem 3: %d", rsi
+	SOLUTION "Problem 3: %lld", rsi
 end macro
 
-INCLUDE "support.win64.inc"
+INCLUDE ".\support\win64.inc"
 
 macro __DATA ; must be placed after support include (if present)
 	PRIME_LIMIT = 1_000_000 ; any# >= SQRT(600851475143)
