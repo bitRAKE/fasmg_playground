@@ -73,6 +73,7 @@ macro SOLUTION template,parameters&
 plat:	; print time in ms
 	cvtsi2sd xmm0,qword [rbp]
 	mulsd xmm0,[One_10v4] ; / 10^4
+	movq rdx,xmm0
 	lea rcx,[TimeDisplay]
 	sub rsp,8*4
 	call [_printf_p]
