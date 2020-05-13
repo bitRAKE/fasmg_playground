@@ -1,23 +1,3 @@
-IF __source__=__file__;___TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
-FORMAT PE64 CONSOLE
-INCLUDE 'win64axp.inc'
-.DATA
-ctx taus88.CTX
-; Test values from t_taus88.c based on [2]
-TestArray	dd	\
-	500	-6,	$4F87C056,\
-	1000	-500,	$FED1530B,\
-	5000	-1000,	$91D993A0,\
-	10000	-5000,	$438F5E83,\
-	20000	-10000,	$F4645720,\
-	30000	-20000,	$D5CCC345,\
-	0
-        message db "taus88 PRNG test: "
-        result: db "FAIL.",13,10,0
-        message.bytes = $ - message
-.CODE
-END IF;____TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
-;-------------------------------------------------------------------------------
 ;
 ; taus88 based pseudo random number generator, period about 2^88
 ;
@@ -26,6 +6,7 @@ END IF;____TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
 ; [2] http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme.ps
 ;     Online version of [1] with corrections
 ;
+if __source__<>__file__ ; FYI: assembly of this file builds test case!
 define taus88
 namespace taus88
 
@@ -42,7 +23,6 @@ end struc
 virtual at 0
 CTX CTX
 end virtual
-
 
 
 ALIGN 16
@@ -84,10 +64,10 @@ virtual at RCX
 .ctx CTX
 end virtual
 	mov [.ctx.nr],0
-	; minimal seeds if memory is zero
-	xor [.ctx.s1],2
-	xor [.ctx.s2],8
-	xor [.ctx.s3],16
+	; minimal seeds, these must be > zero
+	or [.ctx.s1],2
+	or [.ctx.s2],8
+	or [.ctx.s3],16
 	; state not valid until six iterations
 	repeat 6
 		call next
@@ -95,26 +75,44 @@ end virtual
 	retn
 
 end namespace
-
-;_______________________________________________________________________________
-IF __source__=__file__;___TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
+else;-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST
+FORMAT PE64 CONSOLE
+INCLUDE 'win64axp.inc'
+.CODE
 Start:	lea rbx,[TestArray]
 	lea rcx,[ctx]
 	call taus88.init	; perserves RCX
 ;	lea rcx,[ctx]
-  @@:	call taus88.next	; perserves RCX
+check:	call taus88.next	; perserves RCX
 	sub dword[rbx],1
-	jnz @B
+	jnz check
 	add rbx,8
 	cmp eax,[rbx-4]
-	jnz .fail
+	jnz fail
 	cmp dword[rbx],0
-	jnz @B
-.pass:	mov dword[result],"pass"
-
-.fail:	pop rax
-	invoke GetStdHandle,STD_OUTPUT_HANDLE
+	jnz check
+pass:	mov dword[result],"pass"
+fail:	invoke GetStdHandle,STD_OUTPUT_HANDLE
 	invoke WriteConsoleA,rax,message,message.bytes,0,0
         invoke ExitProcess,0
+
+	include '.\taus88.inc' ; dot dir changes name to bypass 'if' at start
+.DATA
+
+ctx taus88.CTX ; PRNG context
+
+; Test values from t_taus88.c based on [2]
+
+TestArray	dd	\
+	500	-6,	$4F87C056,\
+	1000	-500,	$FED1530B,\
+	5000	-1000,	$91D993A0,\
+	10000	-5000,	$438F5E83,\
+	20000	-10000,	$F4645720,\
+	30000	-20000,	$D5CCC345,\
+	0
+        message db "taus88 PRNG test: "
+        result: db "FAIL.",13,10,0
+        message.bytes = $ - message
 .END Start
-END IF;____TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
+end if;EST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST
