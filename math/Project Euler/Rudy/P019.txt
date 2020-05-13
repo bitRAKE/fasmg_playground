@@ -1,0 +1,81 @@
+I decided to solve this one by hand also:
+
+Sunday Monday Tuesday Wednesday Thursday Friday Saturday
+  0      1       2        3        4       5       6
+Those are modulo 7 remainders.
+
+Normal year started in a specific
+ remainder 0,1,2,3,4,5,6
+                         # of Suns  # of Suns
+                          in Year  in 4 years
+J F M A M J J A S O N D
+---------------------------------------------
+0 3 3 6 1 4 6 2 5 0 3 5      2     2,2,2,2  8
+1 4 4 0 2 5 0 3 6 1 4 6      2     2,2,1,2  7
+2 5 5 1 3 6 1 4 0 2 5 0      2     2,1,3,1  7
+3 6 6 2 4 0 2 5 1 3 6 1  ok  1     1,3,1,1  6
+4 0 0 3 5 1 3 6 2 4 0 2      3     3,1,1,3  8
+5 1 1 4 6 2 4 0 3 5 1 3      1     1,1,2,2  6
+6 2 2 5 0 3 5 1 4 6 2 4      1     1,2,2,1  6
+
+Lap year started in a specific
+ remainder 0,1,2,3,4,5,6
+                         # of Sundays
+                         in the Year
+J F M A M J J A S O N D
+-------------------------------------
+0 3 4 0 2 5 0 3 6 1 4 6      3
+1 4 5 1 3 6 1 4 0 2 5 0      2
+2 5 6 2 4 0 2 5 1 3 6 1      1	Ex:
+3 6 0 3 5 1 3 6 2 4 0 2      2	L2=1
+4 0 1 4 6 2 4 0 3 5 1 3  ok  2
+5 1 2 5 0 3 5 1 4 6 2 4      1
+6 2 3 6 1 4 6 2 5 0 3 5      1
+
+The numbers in the quartets are obtained
+ using the 1st 3 consecutive years from
+ the top table and the last from the
+ lower table
+----------------------------------------
+1901 to 2000 is a sequence  of 25 groups
+ of 4 years like 'nor,nor,nor,lap' 
+1901 started in a monday (remainder 1)
+Each consecutive in the 5th remainder
+ (4 for each year + 1 extra for the last
+  year being lap)
+
+Year  start  # of
+       at    Months
+
+1901    2     7
+1905    0     8
+1909    5     6
+1913    3     6    48
+1917    1     7
+1921    6     6
+1925    4     8
+
+1929    2     7
+1933    0     8
+1937    5     6
+1941    3     6    48
+1945    1     7
+1949    6     6
+1953    4     8
+
+1957    2     7
+1961    0     8
+1965    5     6
+1969    3     6    48
+1973    1     7
+1977    6     6
+1981    4     8
+
+1985    2     7
+1999    0     8    27
+1993    5     6
+1997    3     6
+
+Total = 171
+Best,
+Rudy.

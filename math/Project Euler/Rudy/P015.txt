@@ -14,5 +14,3 @@ The total is:	40!/(20!)(20!) = 137846528820
 Just use the MS calculator.
 Best,
 Rudy.
-
-Rudy Penteado died on Feb 25, 2006

@@ -1,0 +1,24 @@
+
+A collection of Project Euler Problem Solutions
+
+https://projecteuler.net
+
+Solutions have been written in a variety of programming languages:
+
+TXT	ASCII description of pen & paper type solution (English)
+G	Solutions in fasmg preprocessor langauge syntax
+ASM	Programs to be compiled with fasmg
+VBS	Visual Basic Script
+NB	Mathematica Notebook
+
+
+
+Additonal folders of various purpose:
+
+\data		Some problems provided data files needs for the solution.
+\support	Algorithms used by several of the problems.
+\Rudy		Homage to a fellow coder
+
+
+
+All this content is in the Public Domain.

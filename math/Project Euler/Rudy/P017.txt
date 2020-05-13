@@ -59,5 +59,3 @@ ninehundredand	(=14)
 onethousand	11+14*99+854+18873=21124
 Best,
 Rudy.
-
-Rudy Penteado died on Feb 25, 2006
