@@ -10,6 +10,8 @@ if __source__<>__file__ ; FYI: assembly of this file builds test case!
 define taus88
 namespace taus88
 
+ICNT = 6 ; initialization count to reach valid state
+
 struc CTX
 label .
 namespace .
@@ -68,8 +70,8 @@ end virtual
 	or [.ctx.s1],2
 	or [.ctx.s2],8
 	or [.ctx.s3],16
-	; state not valid until six iterations
-	repeat 6
+	; state not valid until ICNT iterations
+	repeat ICNT
 		call next
 	end repeat
 	retn
@@ -79,8 +81,8 @@ else;-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST
 FORMAT PE64 CONSOLE
 INCLUDE 'win64axp.inc'
 .CODE
-Start:	lea rbx,[TestArray]
-	lea rcx,[ctx]
+Start:	lea rbx,[TestArray]	; test intervals to confirm
+	lea rcx,[ctx]		; PRNG context
 	call taus88.init	; perserves RCX
 ;	lea rcx,[ctx]
 check:	call taus88.next	; perserves RCX
@@ -103,16 +105,14 @@ ctx taus88.CTX ; PRNG context
 
 ; Test values from t_taus88.c based on [2]
 
-TestArray	dd	\
-	500	-6,	$4F87C056,\
-	1000	-500,	$FED1530B,\
-	5000	-1000,	$91D993A0,\
-	10000	-5000,	$438F5E83,\
-	20000	-10000,	$F4645720,\
-	30000	-20000,	$D5CCC345,\
-	0
-        message db "taus88 PRNG test: "
-        result: db "FAIL.",13,10,0
-        message.bytes = $ - message
+TestArray dd	500-taus88.ICNT,$4F87C056,\
+		1000	-500,	$FED1530B,\
+		5000	-1000,	$91D993A0,\
+		10000	-5000,	$438F5E83,\
+		20000	-10000,	$F4645720,\
+		30000	-20000,	$D5CCC345,0
+message db "taus88 PRNG test: "
+result: db "FAIL.",13,10,0
+message.bytes = $ - message
 .END Start
 end if;EST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST
