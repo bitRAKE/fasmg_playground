@@ -22,16 +22,12 @@ namespace .
 end namespace
 end struc
 
-virtual at 0
-CTX CTX
-end virtual
-
 
 ALIGN 16
 next:	push rbx
-virtual at RCX
-.ctx CTX
-end virtual
+	virtual at RCX
+		.ctx CTX
+	end virtual
 	mov eax,[.ctx.s1]
 	mov ebx,[.ctx.s2]
 	mov edx,[.ctx.s3]
@@ -61,10 +57,9 @@ end virtual
 	retn
 
 
-init:
-virtual at RCX
-.ctx CTX
-end virtual
+init:	virtual at RCX
+		.ctx CTX
+	end virtual
 	mov [.ctx.nr],0
 	; minimal seeds, these must be > zero
 	or [.ctx.s1],2

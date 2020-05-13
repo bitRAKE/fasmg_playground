@@ -63,7 +63,7 @@ next:	push rbx
 
 
 init:	virtual at RCX
-	.ctx CTX
+		.ctx CTX
 	end virtual
 	mov [.ctx.nr],0
 	; minimal seed, at least one bit > than these must be non-zero
