@@ -10,7 +10,6 @@ end macro
 ;	mulsd xmm0,[One_10v4] ; / 10^4
 ;	movq rdx,xmm0
 
-align 16
-One_10v4: dq 0.0001,0.0001,0.0001,0.0001 ; convert 100 ns -> ms
-TimeDisplay db 13,10,"time: %f ms",13,10,0
-
+;align 16
+;One_10v4: dq 0.0001,0.0001,0.0001,0.0001 ; convert 100 ns -> ms
+;TimeDisplay db 13,10,"time: %f ms",13,10,0
