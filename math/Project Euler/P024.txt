@@ -1,0 +1,16 @@
+Let's enumerate the permutations starting with index 0. Then were going to find the permutation with index 999999. The  permutation with index 0 is 0123456789.
+
+We shall also enumerate the digits "available for use" in the same way, i.e. starting with index 0. At the beginning, those digits will be 0123456789 (in that order).
+
+We now write 999999 = 2 * 9! + 274239.
+The quotient 2 gives the index (in 0123456789) of the first digit: 2.
+Remove that digit from the available digits: 013456789.
+
+Next, we write 274239 = 6 * 8! + 32319.
+The quotient 6 again gives the index (now in 013456789) of the second digit: 7.
+Remove that digit from the available digits: 01345689.
+
+Continue in this way, dividing by n!, until (including) n=0.
+The quotients will be (from the beginning): 2, 6, 6, 2, 5, 1, 2, 1, 1 and 0, giving the digits 2, 7, 8, 3, 9, 1, 5, 4, 6 and 0.
+
+The searched-for permutation thus is: 2783915460.

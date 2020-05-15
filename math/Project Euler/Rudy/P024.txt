@@ -1,0 +1,27 @@
+No code for this one too. I just remembered that permutations of
+ n terms (n by n) is n!  If you can understand this sketch, you
+ will enjoy it also.
+
+ Orig.  Remaindr  digits   blck  blocks  digit used    remndr in
+ size   searched  in use   size  passed   in result    curr. blk
+            (R)             (B)   (Q)=R/B               (N)
+3628800  1000000    10   362880    2   01<2>3456789 2    274240
+ 362880   274240     9    40320    6    013456<7>89 7     32320
+  40320    32320     8     5040    6     013456<8>9 8      2080
+   5040     2080     7      720    2      01<3>4569 3       640
+    720      640     6      120    5       01456<9> 9        40
+    120       40     5       24    1        0<1>456 1        16
+     24       16     4        6    2         04<5>6 5         4
+      6        4     3        2    2          04<6> 6         0
+      2        0     2        1    0           <0>4 0         0
+      1        0   n.a.    n.a.    0            <4> 4         0
+
+                 2783915046
+                 2783915064
+                 2783915406
+                 2783915460  <---1,000,000th
+permutation is:  2783915604  member # 1000001
+                 2783915640
+
+Best regards,
+Rudy.

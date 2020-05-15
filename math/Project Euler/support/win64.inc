@@ -57,10 +57,9 @@ macro SOLUTION template,parameters&
 	Get100ns rbp
 	sub [rsp],rbp ; -delta
 	pop rbp
-	neg rbp
 	; no reason to grab this much stack, but RBP is back on that stack
 	enter 2048,0
-	and spl,-64
+	and spl,-64 ; a little paranoia is a good thing (for debugging)
 
 	; store values first to preserve them
 	iterate pram,parameters
@@ -69,10 +68,10 @@ macro SOLUTION template,parameters&
 	end iterate
 	pop rax ; alignment fix
 	call plat
-	db template,0
+	db template,0 ; easy way to support complex strings like <" "," ">
 plat:	; print time in ms
 	cvtsi2sd xmm0,qword [rbp]
-	mulsd xmm0,[One_10v4] ; / 10^4
+	mulsd xmm0,[One_10v4] ; -10^-4
 	movq rdx,xmm0
 	lea rcx,[TimeDisplay]
 	sub rsp,8*4
@@ -98,7 +97,7 @@ atom:	mov reg,[0x7FFE0008]
 end macro
 
 align 16
-One_10v4: dq 0.0001,0.0001,0.0001,0.0001 ; convert 100 ns -> ms
+One_10v4: dq -0.0001,-0.0001,-0.0001,-0.0001 ; convert 100 ns -> ms
 TimeDisplay db 13,10,"Problem time: %f ms",13,10,0
 
 ENTRY $ ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY

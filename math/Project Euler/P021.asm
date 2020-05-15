@@ -1,5 +1,7 @@
 macro PROBLEM
 
+; FIX: proper factors loop is wrong for: 2,6,... (for different reasons)
+
 LIMIT = 10000
 
 	xor edi,edi
