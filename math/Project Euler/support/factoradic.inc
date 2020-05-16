@@ -50,7 +50,7 @@ end macro
 
 ; convert [RSI] factoradic form to integer
 ; no leading zero, terminates with invalid digit
-macro FACTORADIC_Integer reg=RBX,reg0=RBP,reg1=RCX
+macro FACTORADIC__Integer reg=RBX,reg0=RBP,reg1=RCX
 	local l,x
 	xor reg32.reg,reg32.reg
 	lea reg32.reg1,[reg+1]
@@ -93,7 +93,7 @@ Start:	push -128 ; test range [-127,126]
 	push rax
 	INTEGER__Factoradic
 	lea rsi,[buf]
-	FACTORADIC_Integer
+	FACTORADIC__Integer
 	cmp [rsp],rbx
 	jz .chk
 .fail:	mov ebx,"FAIL"
