@@ -116,7 +116,7 @@ AutoHeap__Create:
 	; put it in front (assume it's being used now)
 	DOUBLELIST__INSERT AutoHeaps.root,rax, rcx
 
-	; initilize commit memory
+	; initialize commit memory
 	xchg rax,r10
 	; RDX: commit size
 	call r8

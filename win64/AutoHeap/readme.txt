@@ -21,7 +21,7 @@ AutoHeap__Create
 (initialization function):
 	RAX: start address
 	RDX: bytes to initialize
-	Called whenever new memory is commited or during reset. This
+	Called whenever new memory is committed or during reset. This
 	function must not read beyond memory range.
 
 
@@ -33,7 +33,8 @@ AutoHeap__Destroy
 AutoHeaps__Reset
 	Doesn't take or return anything.
 	Reduce and re-initialize heaps created. Note: doesn't clear
-	heap to zero automatically - must pass function that clears.
+	heap to zero automatically - must pass function that clears
+	during heap creation.
 
 
 
@@ -46,7 +47,7 @@ AutoHeaps__Reset
 
 Use case:
 
-Algorithms needing several growing buffers. Reserve availible address ranges in proportion to needs of the algorithm to provide maximum utility of memory.
+Algorithms needing several growing buffers. Reserve available address ranges in proportion to needs of the algorithm to provide maximum utility of memory.
 
 The failure process for an auto heap:
 	- no failure
@@ -56,7 +57,7 @@ The failure process for an auto heap:
 
 Why not just catch EXCEPTION_ACCESS_VIOLATION exceptions?
 
-Complex algorithms can be problematic. So, the added layers of scrutiny are desireable. Memory granularity makes sparse random access overly wasteful. Other code is running in our process and protections prevent unintended access.
+Complex algorithms can be problematic. So, the added layers of scrutiny are desirable. Memory granularity makes sparse random access overly wasteful. Other code is running in our process and protections prevent unintended access.
 
 
 

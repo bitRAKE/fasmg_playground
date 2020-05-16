@@ -11,14 +11,14 @@ include 'autoheaps.inc'
 ; global - all AutoHeaps use same VEH, and system parameters
 align 64
 AutoHeaps:
-	; sentinal node of double list
+	; sentinel node of double list
 	.root DOUBLELIST AutoHeaps.root,AutoHeaps.root
 
 	.Granularity	rd 1
 	.PageBytes	rd 1
 
 	.hGuardVEH	rq 1
-	.heaps 		dq -1 ; bit pattern of heap availiblity
+	.heaps 		dq -1 ; bit pattern of heap availability
 	rb 64 * AutoHeap.bytes ; overkill
 
 ENTRY $ ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY ; ENTRY
