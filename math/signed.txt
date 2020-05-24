@@ -1,0 +1,23 @@
+; round toward zero signed-integers, Terje Mathisen
+; For certain applications it is often necessary to round signed integers so that they always tend to 0. However, the signed shifts on the Intel processors don't do it properly.
+;
+; Let's see what we want to do:
+; For negative inputs where the last bit shifted out was set, you want to increment the results from a normal arithmetic shift. My approach uses one 6 instructions, but allows some pairing, so it should take the 4 cycles on top of the shift instruction. This makes it probably faster than using branches:
+
+        sar     eax,cl          ; ?  Arithmetic shift, last bit shifted into carry
+	sbb     ebx,ebx         ; U EBX = (Carry) ? -1 : 0
+	mov     edx,eax         ; V
+	sar     edx,31          ; U EDX = (EAX < 0) ? -1 : 0
+	and     ebx,edx         ; U EBX = (Carry && EAX < 0)? -1 : 0
+	sub     eax,ebx         ; U
+
+; This has the added benefit of working when the input value is MIN_INT (80000000h), but suffers from a problem when the shift count is zero and the input value is negative: In that case my version will fail if the Carry flag happened to be set before the SAR EAX,CL (0) which doesn't touch Carry. You can use the same gem on 16 bit machines too, just use 16 bit registers instead. And change the shift value to 15.
+
+
+; same result:
+
+sar rax,cl
+sbb rdx,rdx
+and rdx,rax
+sar rdx,64-1
+sub rax,rdx

@@ -1,0 +1,246 @@
+BitString__ShiftLeft:		; general left shift of a bit string
+
+BitString__ShiftRight:		; general right shift of a bit string
+; ECX bits to shift
+; RSI source buffer (dword granularity assumed)
+; RDI destination buffer
+; RBX /end/ of source buffer
+	jrcxz .do_copy
+
+	; TODO: does ECX exceed size of RSI buffer?
+
+	mov eax,ecx
+	shr eax,5	; number of dwords to shift
+	lea rsi,[rsi+rax*4]
+	and cl,31
+	jnz .shift
+.do_copy:
+	mov ecx,ebx
+	sub ecx,esi
+	shr ecx,2
+	rep movsd
+	retn
+
+.shift:
+	xor edx,edx
+.A:     lodsd
+	shrd edx,eax,cl
+	xchg eax,edx
+	stosd
+	cmp rsi,rbx
+	jbe .A
+	retn
+; RDI is end of destination buffer (used to primarily calculate new size)
+
+
+
+
+
+
+
+
+; left shift bit string by one (little endian)
+; 8*RCX bits located in memory at RAX
+
+	clc
+_:	rcl byte [rax],1
+	inc rax
+	loop _
+
+; right shift bit string by one (little endian)
+
+	clc
+_:	rcr byte [rax+rcx-1],1
+	loop _
+
+
+
+
+; multi-bit left shift of bit string (little endian)
+
+	xor edx,edx
+_:	mov eax,[rdi]
+	push rax
+	shld eax,edx,cl
+	dec ebx
+	stosd
+	pop rdx
+	jnz _
+
+; multi-bit right shift of bit string (little endian)
+
+	xor edx,edx
+_:	mov eax,[rdi+rbx*4-4]
+	push rax
+	shrd eax,edx,cl
+	dec ebx
+	pop rdx
+	mov [rdi+rbx*4],eax
+	jnz _
+
+
+
+; reverse bit order
+;	ECX count of bits to reverse
+;	EBX data, assume bits are aligned low
+	xor eax,eax
+_:	ror ebx,1
+	rcl eax,1
+	loop _
+
+
+; reverse the full width of register
+	mov eax,1
+_:	ror ebx,1
+	rcl eax,1
+	jnc _
+
+
+reverse_dword_eax:
+push ebx
+mov ebx,table
+xlat
+mov bl,ah
+mov ah,[ebx]
+bswap eax
+xlat
+mov bl,ah
+mov ah,[ebx]
+pop ebx
+ret
+
+bitswap_al:    ; swap bits in al (destroy: ah)
+  mov ah,al
+  and ax,55aah ; ah = 0?0?0?0? , al = ?0?0?0?0
+  ror al,2
+  or  al,ah
+  mov ah,al
+  and ax,9966h ; ah = ?00??00? , al = 0??00??0
+  rol al,4
+  or  al,ah
+  ror al,1
+  ret
+
+bitswap_ax:      ; swap bits in ax
+  push dx
+  mov  dx,ax
+  and  ax,0aaaah ; ax = ?0?0?0?0?0?0?0?0
+  and  dx,05555h ; dx = 0?0?0?0?0?0?0?0?
+  ror  ax,2
+  or   ax,dx
+  mov  dx,ax
+  and  ax,06666h ; ax = 0??00??00??00??0
+  and  dx,09999h ; dx = ?00??00??00??00?
+  ror  ax,4
+  or   ax,dx
+  mov  dx,ax
+  and  ax,01e1eh ; ax = 000????0000????0
+  and  dx,0e1e1h ; dx = ???0000????0000?
+  ror  ax,8
+  or   ax,dx
+  ror  ax,1
+  pop  dx
+  ret
+  
+  
+bitswap_eax:
+        mov     edx,eax
+        and     eax,0aaaaaaaah
+        and     edx,055555555h
+        ror     eax,2
+        or      eax,edx
+        mov     edx,eax
+        and     eax,066666666h
+        and     edx,099999999h
+        ror     eax,4
+        or      eax,edx
+        mov     edx,eax
+        and     eax,01e1e1e1eh
+        and     edx,0e1e1e1e1h
+        ror     eax,8
+        or      eax,edx
+        mov     edx,eax
+        and     eax,001fe01feh
+        and     edx,0fe01fe01h
+        ror     eax,16
+        or      eax,edx
+        ror     eax,1
+        ret  
+  
+  
+align 64
+c5555   dq      05555555555555555h
+c3333   dq      03333333333333333h
+c0f0f   dq      00f0f0f0f0f0f0f0fh
+c00ff   dq      000ff00ff00ff00ffh
+
+bitswap_mm0:
+        movq    mm1,mm0
+        psrlq   mm0,1
+        pand    mm0,[c5555]
+        pand    mm1,[c5555]
+        psllq   mm1,1
+        por     mm0,mm1
+        movq    mm1,mm0
+        psrlq   mm0,2
+        pand    mm0,[c3333]
+        pand    mm1,[c3333]
+        psllq   mm1,2
+        por     mm0,mm1
+        movq    mm1,mm0
+        psrlq   mm0,4
+        pand    mm0,[c0f0f]
+        pand    mm1,[c0f0f]
+        psllq   mm1,4
+        por     mm0,mm1
+        movq    mm1,mm0
+        psrlq   mm0,8
+        pand    mm0,[c00ff]
+        pand    mm1,[c00ff]
+        psllq   mm1,8
+        por     mm0,mm1
+        pshufw  mm0,mm0,0*64+1*16+2*4+3
+        ret  
+  
+align 64
+d5555   dq      05555555555555555h,05555555555555555h
+d3333   dq      03333333333333333h,03333333333333333h
+d0f0f   dq      00f0f0f0f0f0f0f0fh,00f0f0f0f0f0f0f0fh
+d00ff   dq      000ff00ff00ff00ffh,000ff00ff00ff00ffh
+
+bitswap_xmm0:
+        movdqa  xmm1,xmm0
+        psrlq   xmm0,1
+        pand    xmm0,dqword[d5555]
+        pand    xmm1,dqword[d5555]
+        psllq   xmm1,1
+        por     xmm0,xmm1
+        movdqa  xmm1,xmm0
+        psrlq   xmm0,2
+        pand    xmm0,dqword[d3333]
+        pand    xmm1,dqword[d3333]
+        psllq   xmm1,2
+        por     xmm0,xmm1
+        movdqa  xmm1,xmm0
+        psrlq   xmm0,4
+        pand    xmm0,dqword[d0f0f]
+        pand    xmm1,dqword[d0f0f]
+        psllq   xmm1,4
+        por     xmm0,xmm1
+        movdqa  xmm1,xmm0
+        psrlq   xmm0,8
+        pand    xmm0,dqword[d00ff]
+        pand    xmm1,dqword[d00ff]
+        psllq   xmm1,8
+        por     xmm0,xmm1
+        pshuflw xmm0,xmm0,0*64+1*16+2*4+3
+        pshufhw xmm0,xmm0,0*64+1*16+2*4+3
+        pshufd  xmm0,xmm0,1*64+0*16+3*4+2
+        ret
+
+
+
+
+
+
+

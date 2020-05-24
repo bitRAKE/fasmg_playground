@@ -1,0 +1,60 @@
+; NOTE: CMOVx and SETx also apply to most of below methods
+
+
+
+macro JRCXNZ? target*
+	inc rcx
+	loop target
+end macro
+
+
+
+; testing if a register is zero
+
+jrcxz target
+
+test reg,reg
+jz target
+
+
+
+;testing if a register is one
+
+dec reg
+jz target
+
+
+;testing if a register is -1
+
+inc reg
+jz target
+
+
+; reg is NOT boolean value (0 or 1)
+
+test reg,-2	; shr reg,1
+jnz target
+
+
+
+; strange combinations
+
+
+
+
+
+
+	mov cl,outer_cycle_num
+outer_cycle:
+
+	; [ outer cycle code ]
+
+	mov ch,inner_cycle_num
+inner_cycle:
+
+	; [ inner cycle code ]
+
+	dec ch			; sub rcx,1 shl X ; for larger inner loop counts
+	jne inner_cycle
+	loop outer_cycle
+

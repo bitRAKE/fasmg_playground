@@ -1,0 +1,33 @@
+; sin table method by KarL/NoooN
+;
+; The method used is a recursive sinus sythesis. It's possible to compute all
+; sinus values with only the two previous ones and the value of cos(2ã/N),
+; where n is the number of values for one period. It's as follow:
+;
+;	Sin(K)=2.Cos(2ã/N).Sin(K-1)-Sin(K-2)
+; or
+;	Cos(K)=2.Cos(2ã/N).Cos(K-1)-Cos(K-2)
+;
+; The last one is easiest to use, because the two first values of the cos table
+; are 1 and cos(2ã/n) and with this two values you are able to build all the
+; following. Some simple code (the cos table has 1024 values and ranges from
+; -2^24 to 2^24):
+
+
+build_table:	lea    rsi,[cos_table+4]
+		lodsd
+		push rsi
+		pop rdi
+		mov    ebx,eax
+		mov    cx,1022
+@@calc:
+		imul   ebx
+		shrd   eax,edx,23
+		sub    eax,[rdi-8]
+		stosd
+		loop   @@calc
+
+cos_table	dd     16777216         ; 2^24
+		dd     16776900         ; 2^24*cos(2ã/1024)
+		dd     1022     dup (?)
+

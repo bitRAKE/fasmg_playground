@@ -1,0 +1,46 @@
+; gcd(a,0) = a
+; gcd(a,b) = gcd(b,a mod b)
+; gcd(a,a) = a
+; gcd(a,b) = gcd(a-b,b), a > b
+; gcd(a,b) = gcd(a,b-a), b > a
+
+
+macro gcd? reg0,reg1 ; reg0 > 0
+	local _0,_1
+;	jmp _1
+_0:	neg reg1
+	xchg reg1, reg0
+_1:	sub reg1, reg0
+	jg _1
+	jnz _0
+end macro
+
+;
+; gcd - greatest common divisor
+;       by Paul Hsieh
+;
+; input:
+;   eax = a
+;   ebx = b
+;
+; output:
+;   eax = gcd
+;
+; destroys:
+;   edx
+;   flags
+;
+
+gcd:    neg     eax
+        je      L3
+L1:     neg     eax
+        xchg    eax,edx
+L2:     sub     eax,edx
+        jg      L2
+        jne     L1
+L3:     add     eax,edx
+        jne     L4
+        inc     eax
+L4:     ret
+
+

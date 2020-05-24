@@ -1,0 +1,93 @@
+; RCX items to sort > 0
+; RSI array of items to sort
+BubbleSort:
+.A:	push rcx
+	push rsi
+	push rsi
+	pop rdi
+.B:	lodsd
+	cmp eax,[rsi]
+	jge .ok
+	xchg eax,[rsi]
+.ok:	stosd
+	loop .B
+	pop rdi
+	pop rcx
+	loop .A
+	retn
+
+
+Sort.outer:
+	push rdi
+	push rcx
+	push rax
+.inr:	mov eax,[rdi]
+	xchg eax,[rdi+4]
+	xchg eax,[rdi]
+	cmp eax,[rdi]
+	jl .inr
+	scasd
+	loop .inr
+
+Sort:	pop rax
+	pop rcx
+	pop rdi
+	loop .outer
+	retn 8*2
+
+
+; use it like so ...
+	push _list
+	push _items
+	call Sort
+
+
+
+
+
+
+; by Andrew Howe
+outerloop:
+	lea rbx,[rdi+rcx*4]
+	mov eax,[rdi]
+cmploop:
+	sub rbx,4
+	cmp eax,[rbx]
+	jle .no
+	xchg eax,[ebx]
+.no:	cmp ebx,edi
+	jnz cmploop
+	stosd
+	loop outerloop    
+
+
+
+;;
+;; The "worlds smallest" bubble sort (16 bytes)
+;;
+;; Copyright (c) 1998 by Joergen Ibsen / Jibz
+;; All Rights Reserved
+;;
+bits 32
+section .text
+;=====================================================================
+;     enter:  edi -> array
+;             ecx =  #elements - 1
+;     exit:   edi -> array
+;             ecx =  0
+;     modify: ecx
+;=====================================================================
+bsort32:
+.outerloop:
+    pusha                         ; save edi and ecx
+    mov     esi, edi
+.innerloop:
+    lodsd
+    cmp     eax, [esi]            ; do we need to swap?
+    jge     short .order_ok
+    xchg    eax, [esi]            ; if so, this is first step
+.order_ok:
+    stosd                         ; second step, or just write back eax
+    loop    .innerloop
+    popa                          ; pop edi and ecx
+    loop    .outerloop            ; ecx is used for both loops
