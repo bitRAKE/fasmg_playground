@@ -19,4 +19,3 @@ UINT64__Baseform:
 
 align 64
 digit_table db '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-

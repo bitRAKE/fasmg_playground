@@ -1,0 +1,68 @@
+; create routines to generate .WAV files and modify the sample data
+; start with simple sin waves overlapping ...
+
+
+
+
+struc Sample L,R
+label .:4
+namespace .
+	left	dw L
+	right	dw R
+end namespace
+end struc
+
+
+
+
+struc WAV samplesPerSec, GET_SAMPLES
+label .:.riffChunkSize + 8
+namespace .
+	db 'RIFF' ; TODO: generalized RIFF form
+	dd riffChunkSize
+	riffStart:
+	db 'WAVE'
+
+	db 'fmt '
+	dd fmt_ChunkSize
+	fmt_Start:
+		dw 1	; formatTag
+		dw 2	; nChannels
+		dd samplesPerSec
+		dd avBytesPerSec
+		dw blockAlignment
+		dw bitsPerSample
+		fmt_ChunkSize = $ - fmt_Start
+
+	db 'data'
+	dd dataChunkSize
+	dataStart:
+
+		; output a labeled virtual address space
+
+		dataChunkSize = $ - dataStart
+
+	riffChunkSize = $ - riffStart
+end namespace
+end macro
+
+
+; create initial sample buffer
+virtual at 0
+	sndbuff0::
+		;?
+end virtual
+
+
+
+PI_64 = 0x3_243F_6A88_85A3_08D3
+;PI_128 = 0x3243F6A8885A308D3_13198A2E03707344
+macro sinsamples freq,samples
+	repeat samples
+		dw vol * y
+		dw vol * y
+	end repeat
+end macro
+
+
+A440 WAV 32000,sndbuff0
