@@ -14,14 +14,14 @@ macro LOG fmt,P:0 &
 	local _
 	push _
 	enter 2024,0
-	and rsp,-16
+	and spl,-16
 	iterate p,P
 		mov rax,p
 		mov [rsp+24+8*%],rax
 	end iterate
 	call __DEBUG__
 	db fmt,0
-	label _:8
+	label _:-1
 end macro
 
 ; time delta first parameter of log line
@@ -29,7 +29,7 @@ macro TLOG fmt,P&
 	local _
 	push _
 	enter 2024,0
-	and rsp,-16
+	and spl,-16
 	Get100ns
 	push rax
 	sub rax,[_timelast]
@@ -40,7 +40,7 @@ macro TLOG fmt,P&
 	end iterate
 	call __DEBUG__
 	db "0x%IX: ",fmt,13,10,0
-	label _:8
+	label _:-1
 end macro
 
 __DEBUG__:
