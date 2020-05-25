@@ -1,0 +1,11 @@
+NPP's plugin interface requires the DLL to be placed within a folder of the same name. The DLL name doesn't need to match the plugin name. For example, we can have a plugin called "My Test Plugin" assembled to "mytp.dll". That plugin would need to be located at:
+
+	\Notepad++\plugins\mytp\mytp.dll
+
+If the plugin has lexers then an XML file of a specifc name is also needed, but it can be located in two different places:
+
+	{userdir}\AppData\Roaming\Notepad++\plugins\Config\mytp.xml
+or	\Notepad++\plugins\Config\mytp.xml
+
+
+
