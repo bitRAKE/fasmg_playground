@@ -3,23 +3,20 @@
 ; Please, just use a real debugger.
 ;
 include 'format/format.inc'
-include 'cpu/ext/avx2.inc'
 FORMAT PE64 GUI 5.0 at $10000 on "NUL"
-STACK	1,	0
-HEAP	1,	0
 
 SECTION '.flat' CODE READABLE WRITEABLE EXECUTABLE
 
-macro LOG fmt,P:0 &
+macro LOG fmt,P&
 	local _
 	push _
-	enter 2024,0
+	enter 2048,0
 	and spl,-16
 	iterate p,P
 		mov rax,p
 		mov [rsp+24+8*%],rax
 	end iterate
-	call __DEBUG__
+	call __DBGOUT__
 	db fmt,0
 	label _:-1
 end macro
@@ -28,7 +25,7 @@ end macro
 macro TLOG fmt,P&
 	local _
 	push _
-	enter 2024,0
+	enter 2048,0
 	and spl,-16
 	Get100ns
 	push rax
@@ -38,12 +35,12 @@ macro TLOG fmt,P&
 		mov rax,p
 		mov [rsp+24+8*%],rax
 	end iterate
-	call __DEBUG__
+	call __DBGOUT__
 	db "0x%IX: ",fmt,13,10,0
 	label _:-1
 end macro
 
-__DEBUG__:
+__DBGOUT__:
 	pop rdx
 	lea r8,[rsp+32]
 	lea rcx,[rsp+768]
@@ -83,6 +80,10 @@ include 'time.inc'
 ENTRY $
 pop rsi
 
+xor r15,r15
+Get100ns
+mov [_timelast],rax
+
 call [GetCurrentProcess]
 xchg rcx,rax
 or rdx,-1
@@ -90,9 +91,6 @@ or r8,-1
 mov r9d,2 ; QUOTA_LIMITS_HARDWS_MIN_DISABLE
 call [SetProcessWorkingSetSizeEx]
 
-xor r15,r15
-Get100ns
-mov [_timelast],rax
 
 MonkeyBusiness:
 	xor ecx,ecx

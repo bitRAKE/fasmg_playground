@@ -1,0 +1,30 @@
+An open STRUC often presents as "undefined or out of scope" errors.
+
+
+Technically syntacticals on the left side of /match/ are literal values - they just don't require quotes.
+
+
+
+
+Proposed change:
+
+	/iterate/ should ignore trailing comma
+
+	iterate A,
+	end iterate
+
+	...would not loop with A="". To do that would require:
+
+	iterate A,,
+	end iterate
+
+This change would follow list definitions in many other languages and parallels whitespace separated lists - trailing whitespace is not another item.
+
+Present functionality has no way to iterate zero times without additional branching. Copy-Paste of lists always requires post paste editing when trailing item is modified.
+
+/repeat/ instruction already follows a zero based pattern. So, this change would seem to align the functionality across fasmg.
+
+How would it effect existing code? Only the empty case would need to be changed.
+
+
+
