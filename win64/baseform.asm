@@ -3,7 +3,8 @@ UINT64__Baseform:
 ; RCX number base to use [2,36]
 ; RDI string buffer of length [65,14] bytes
 	push 0
-.A:	div rcx
+.A:	xor edx,edx
+	div rcx
 	push qword [digit_table+rdx]
 	test rax,rax
 	jnz .A
