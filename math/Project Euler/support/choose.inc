@@ -19,7 +19,8 @@ Choose:	lea edx,[rcx*2]
 	mul rdx
 	div rcx
 	retn
-.k0:	lea eax,[rcx+1]
+.k0:	lea eax,[rcx+1] ; mov eax,1 ; push 1 / pop rax
 	retn
-; ECX: k
+; ECX: k or n-k
+; RDX: used
 ; RAX: Choose(EAX,ECX)
