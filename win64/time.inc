@@ -1,7 +1,10 @@
 macro Get100ns reg=RAX ; use KUSER_SHARED_DATA.InterruptTime
 local atom
-atom:	mov reg,[0x7FFE0008]
+atom:
+	; need to force absolute addressing in case relocations are active
+	mov reg,[0x7FFE0008]
 	ror reg,32
+	; need to force absolute addressing in case relocations are active
 	cmp [0x7FFE0010],reg32.reg
 	jnz atom
 	ror reg,32

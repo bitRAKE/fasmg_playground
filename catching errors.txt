@@ -5,6 +5,7 @@ Technically syntacticals on the left side of /match/ are literal values - they j
 
 
 
+https://board.flatassembler.net/topic.php?p=214249#214249
 
 Proposed change:
 
@@ -25,6 +26,13 @@ Present functionality has no way to iterate zero times without additional branch
 /repeat/ instruction already follows a zero based pattern. So, this change would seem to align the functionality across fasmg.
 
 How would it effect existing code? Only the empty case would need to be changed.
+
+
+Tomasz Grysztar:
+
+"In general, I'm very reluctant to consider any backward-compatibility breaking changes at this point (otherwise I would be attempting changes to what I consider "not the best choices" in some other areas, which I would consider more important - but still not important enough to consider breaking existing source bases now)."
+
+"This specific trait is inherited from fasm 1, where IRP was supposed to behave similarly to a macro with repeated argument - this is why it was chosen that it should behave analogously to such macro and always process at least a single argument, even if empty one. Similarly macros in fasm 1 treat the additional comma at the end always as adding additional empty argument."
 
 
 

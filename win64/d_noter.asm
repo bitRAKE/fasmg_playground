@@ -1,4 +1,5 @@
 ; An example based on: https://board.flatassembler.net/topic.php?t=21491
+; Can Notepad be used as a rudamentary debug logger - in a pinch, yes.
 ;
 ; Please, just use a real debugger.
 ;
@@ -70,6 +71,8 @@ __DBGOUT__:
 
 align 8
 _timelast rq 1
+; The universal modified title of a new instance.
+; Activation requires a fresh character.
 _notepad_title db "*Untitled - Notepad",0
 _EDIT db "EDIT",0
 

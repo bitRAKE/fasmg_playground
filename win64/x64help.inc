@@ -13,6 +13,6 @@ define reg8low.r#i? r#i#b
 end repeat
 
 ; tail of stack frame is almost always the same, name the parts to simplify use
-iterate X, RBP,return_addr,RCX,RDX,R8,R8
+iterate X, RBP,return_addr,RCX,RDX,R8,R9
 	define FRAME.#X rbp+8*%
 end iterate

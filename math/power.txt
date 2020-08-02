@@ -1,0 +1,13 @@
+
+	fld power
+	fld x
+	fyl2x
+	fld1
+	fld st(1)
+	fprem
+	f2xm1
+	fadd
+	fscale
+	fxch st(1)
+	fstp st
+; st0 = X^power

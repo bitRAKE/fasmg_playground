@@ -1,0 +1,106 @@
+while (<dialog still active> &&
+       GetMessage(&msg, NULL, 0, 0, 0)) {
+ if (msg.message == WM_KEYDOWN &&
+     msg.wParam == VK_TAB &&
+     GetKeyState(VK_CONTROL) < 0) {
+  ... do custom navigation ...
+ } else if (!IsDialogMessage(hdlg, &msg)) {
+  TranslateMessage(&msg);
+  DispatchMessage(&msg);
+ }
+}
+
+; modeless dialogs with accelerator navigation
+; handle is filtered to determine which dialog/window
+;	try to translate acc through the hiearchy
+;	try to send to dialog
+; finally use tanslate / dispatch message
+
+while (
+	<dialog still active>
+	&& GetMessage(&msg, NULL, 0, 0, 0))
+{
+	if (
+		!(
+		(hdlg == msg.hwnd || IsChild(hdlg, msg.hwnd)) 
+		&& !TranslateAccelerator(hdlg, hacc, &msg)) 
+		&& !IsDialogMessage(hdlg, &msg)
+		)
+	{
+	TranslateMessage(&msg);
+	DispatchMessage(&msg);
+	}
+}
+
+
+	mov rsi,[Group.Root]
+
+	; first group node contains global parameters
+
+
+
+
+; Easily check for existence of a file/directory
+;	16	FILE_ATTRIBUTE_DIRECTORY
+;	128	FILE_ATTRIBUTE_NORMAL
+macro FileExists file*,attrib:FILE_ATTRIBUTE_NORMAL
+	local no_file
+	lea rcx,[file]
+	call [GetFileAttributesW]
+	add eax,1
+	jc no_file
+	test eax,attrib ; Z=0,C=0 found one
+no_file:
+end macro
+
+
+	lea rcx,[folderW]
+	call [GetFileAttributesW]
+	test eax,FILE_ATTRIBUTE_DIRECTORY
+	lea ecx,[rax+2] ; check for error INVALID_FILE_ATTRIBUTES
+	loopnz execute_function_on_folder
+
+	; fall through for multiple erorr conditions
+
+
+
+
+
+
+; multi-level application filtering
+; 
+
+
+.next_group:
+	mov rsi,[rsi + GROUP.next]
+	mov rcx,[rsi + GROUP.hWnd] ; window or dialog handle
+	jrcxz .not_group_msg
+	cmp rcx,[msg.hwnd]
+	jz .got_group
+	mov rdx,[msg.hwnd]
+	call [IsChild]
+	xchg ecx,eax
+	jrcxz .next_group
+	mov rcx,[rsi + GROUP.hWnd] ; window or dialog handle
+.got_group:
+	mov rdx,[rsi + GROUP.hAcc]
+	lea r8,[msg]
+	call [TranslateAccelerator]
+
+	jrcxz .next_group
+	lea rdx,[msg]
+	mov rcx,[rsi + GROUP.hWnd] ; window or dialog handle
+	call [IsDialogMessage]
+
+	jrcxz .next_group
+
+
+.not_group_msg:
+	lea rcx,[msg]
+	call [TranslateMessage]
+	lea rcx,[msg]
+	call [DispatchMessage]
+
+
+
+

@@ -7,6 +7,10 @@ macro JRCXNZ? target*
 	loop target
 end macro
 
+macro JREGN_VAL? target,reg,value
+	lea rcx,[reg-value+1]
+	loop target
+end macro
 
 
 ; testing if a register is zero
