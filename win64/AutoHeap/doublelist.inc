@@ -17,14 +17,14 @@ macro DOUBLELIST__REMOVE node*,reg0=RAX,reg1=RDX
 	mov [reg0 + DOUBLELIST.prev],reg1
 end macro
 
-macro DOUBLELIST__REINSERT node,reg0=RAX,reg1=RDX
+macro DOUBLELIST__REINSERT node*,reg0=RAX,reg1=RDX
 	mov reg0,[node + DOUBLELIST.next]
 	mov reg1,[node + DOUBLELIST.prev]
 	mov [reg0 + DOUBLELIST.prev],node
 	mov [reg1 + DOUBLELIST.next],node
 end macro
 
-macro DOUBLELIST__INSERT parent,child,reg0=RAX
+macro DOUBLELIST__INSERT parent*,child*,reg0=RAX
 	mov reg0,[parent + DOUBLELIST.next]
 	mov [parent + DOUBLELIST.next],child
 	mov [child + DOUBLELIST.prev],parent

@@ -1,7 +1,8 @@
 ; Growing heap with initialization
 
 struc AUTOHEAP
-label .
+local bytes
+label .:bytes
 namespace .
 	dblst	DOUBLELIST ; linked together to have one exception handler
 
@@ -67,7 +68,7 @@ AutoHeap__Create:
 	mov r8d,MEM_RESERVE
 	; rdx: size of reserve
 	mov rcx,[FRAME.R9 + 8]		; address desired
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .no_reserve
 	mov [FRAME.R9 + 8],rcx		; if it was zero update it
@@ -79,7 +80,7 @@ AutoHeap__Create:
 	mov r8d,MEM_COMMIT
 	mov rdx,[FRAME.RDX]
 	; RCX: base address from above
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .no_commit
 
@@ -88,7 +89,7 @@ AutoHeap__Create:
 	mov r8d,MEM_COMMIT
 	mov edx,[AutoHeaps.PageBytes]
 	add rcx,[FRAME.RDX]
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .no_guard
 
@@ -127,7 +128,7 @@ AutoHeap__Create:
 
 	lea rdx,[AutoHeaps__GuardHandler]
 	or ecx,-1			; who doesn't like to be first
-	call [AddVectoredExceptionHandler]
+	Win64abi AddVectoredExceptionHandler
 	xchg rcx,rax
 	jrcxz AutoHeap__Destroy
 	mov [AutoHeaps.hGuardVEH],rcx
@@ -142,7 +143,7 @@ AutoHeap__Create:
 	mov r8d,MEM_RELEASE
 	xor edx,edx
 	mov rcx,[FRAME.R9 + 8]
-	call [VirtualFree]		; ignore error
+	Win64abi VirtualFree		; ignore error
 .no_reserve:; memory address/size invalid
 	and qword[FRAME.R9 + 8],0	; clear address to also signal problem
 	stc
@@ -164,7 +165,7 @@ AutoHeap__Destroy:
 	mov r8d,MEM_RELEASE
 	xor edx,edx ; free whole address range
 	mov rcx,[rax+AUTOHEAP.BaseAddr]
-	call [VirtualFree]
+	Win64abi VirtualFree
 
 	lea rdx,[AutoHeaps.heaps]
 	mov eax,dword[FRAME.RCX]
@@ -176,7 +177,7 @@ AutoHeap__Destroy:
 	jnz .more
 	; last freed heap removes VEH
 	mov rcx,[AutoHeaps.hGuardVEH]
-	call [RemoveVectoredExceptionHandler]
+	Win64abi RemoveVectoredExceptionHandler
 	and [AutoHeaps.hGuardVEH],0
 .more:	leave
 .bad:	retn

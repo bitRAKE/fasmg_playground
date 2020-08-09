@@ -70,6 +70,13 @@ Additional Features:
 	Buffer group can be reset to initial commit state.
 
 
+
+Coding Methodology:
+
+All of this code falls within the category of initialization code, and as such is coded to be small. Initializing heaps to a particular memory set can be expensive. Ideally, it would be best set initial state on use - to minimize cache polution.
+
+
+
 To Do:
 
 Generalize to any combination of heaps and stacks - with guard pages on both ends of address range possible.

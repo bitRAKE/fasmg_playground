@@ -11,16 +11,19 @@ end macro
 
 
 MINIMUM_BLOCK_SIZE = 64 ; 64,128,256,512,1024,2048,4096
+
 FreeList__InitMem:
 ; RAX : start address to fill
-; RDX : bytes to fill - must be a multiple of 64 and a factor of PageSize
+; RCX : bytes to fill - must be a multiple of MINIMUM_BLOCK_SIZE,
+;	and a factor of PageSize
+	jrcxz .fail
 	push rax
-	push rdx
+	push rcx
 	lea rax,[rax+MINIMUM_BLOCK_SIZE]
-@@:	sub rdx,MINIMUM_BLOCK_SIZE
+@@:	sub rcx,MINIMUM_BLOCK_SIZE
 	mov [rax-MINIMUM_BLOCK_SIZE],rax
 	lea rax,[rax+MINIMUM_BLOCK_SIZE]
-	jnz @B
-	pop rdx
+	ja @B
+	pop rcx
 	pop rax
-	retn
+.fail:	retn

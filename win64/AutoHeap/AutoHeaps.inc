@@ -49,7 +49,7 @@ AutoHeaps__Reset:
 	mov r8d,MEM_DECOMMIT
 	xor edx,edx ; whole address range
 	mov rcx,[rsi+AUTOHEAP.BaseAddr]
-	call [VirtualFree]
+	Win64abi VirtualFree
 	xchg ecx,eax
 	jrcxz .fail
 
@@ -59,7 +59,7 @@ AutoHeaps__Reset:
 	neg rdx
 	add rdx,[rsi+AUTOHEAP.Commit]
 	mov rcx,[rsi+AUTOHEAP.BaseAddr]
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .fail
 
@@ -70,7 +70,7 @@ AutoHeaps__Reset:
 	mov r8d,MEM_COMMIT
 	mov edx,[AutoHeaps.PageBytes]
 	add rcx,[FRAME.RDX]
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .no_guard
 
@@ -135,7 +135,7 @@ AutoHeaps__GuardHandler:
 	mov ecx,[AutoHeaps.PageBytes]
 	sub edx,ecx
 	add rcx,[rdi+AUTOHEAP.GuardAddr]
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .no_commit
 
@@ -150,7 +150,7 @@ AutoHeaps__GuardHandler:
 	mov edx,[AutoHeaps.PageBytes]
 	mov ecx,[AutoHeaps.Granularity]
 	add rcx,[rdi+AUTOHEAP.GuardAddr]
-	call [VirtualAlloc]
+	Win64abi VirtualAlloc
 	xchg rcx,rax
 	jrcxz .no_guard_commit
 	mov [rdi+AUTOHEAP.GuardAddr],rcx
