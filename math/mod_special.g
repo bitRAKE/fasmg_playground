@@ -1,7 +1,5 @@
 ; Modulus by Special Forms:
-;	2^N
-;	2^N - 1
-;	2^N + 1
+;	2ⁿ, 2ⁿ−1, 2ⁿ+1
 ;
 ; Most of the time N is constant through a large calculation and it would be
 ; advantageous to cache the bit mask of that value globally. These algorithms
@@ -36,7 +34,7 @@ struc mod_2ⁿ−1 val,n
 end struc
 
 
-struc mod_2ⁿp1 val,n
+struc mod_2ⁿ₊1 val,n
 	local D,X,sign
 	D = (1 shl n) - 1
 	X = val
@@ -51,8 +49,12 @@ struc mod_2ⁿp1 val,n
 		sign = sign xor 1
 		X = X shr n
 		if X = 0
-			if . > (D + 1)
+			if (D + 1) < . & (bsr .) < (n shl 1)
 				. = (. and D) - (. shr n)
+			else ; force reset when bsr val >> n^2
+				X = .
+				sign = 1
+				. = 0
 			end if
 		end if
 	end while
@@ -83,7 +85,7 @@ repeat 16
 		break
 	end if
 
-	temp mod_2ⁿp1 X, N
+	temp mod_2ⁿ₊1 X, N
 	if temp <> (X mod ((1 shl N)+1))
 		display "mod_2ⁿp1: fail",13,10
 		break

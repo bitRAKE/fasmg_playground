@@ -413,6 +413,8 @@ BigU__div:
 
 
 
+; More Specialized Functions:
+
 BigU__mulmod:
 ; RDI = (RSI * RDI) MOD RBP
 	retn
@@ -431,7 +433,8 @@ BigU__mulmod_Fermat:
 
 
 
-BigU__2ⁿ−1:
+if 0
+BigU__2ⁿ−1: ; programatically avoid needing such numbers
 	push rcx
 	shr ecx,5
 	; get mem in rdi
@@ -443,90 +446,8 @@ BigU__2ⁿ−1:
 	shl eax,cl
 	not eax
 	stosd
-;	mov rdi,rdx
 	retn
+end if
 
 
 
-
-; could cache mask values: ((1 shl n) - 1)
-
-struc mod_2ⁿ val*,n*
-	. = val and ((1 shl n) - 1)
-end struc
-
-
-struc mod_2ⁿ−1 val*,n*
-	local D,N
-	D = (1 shl n) - 1
-	N = val
-	. = val
-	while N > D
-		. = 0
-		while N
-			. = . + (N and D)
-			N = N shr n
-		end while
-		N = .
-	end while
-	if . = D
-		. = 0
-	end if
-end struc
-
-
-struc mod_2ⁿp1 val*,n*
-	local D,N,sign
-	D = (1 shl n) - 1
-	N = val
-	sign = 1
-	. = 0
-	while N
-		if sign
-			. = . + (N and D)
-			if . > (D+2)
-				. = . - D - 2
-			end if
-		else
-			. = . - (N and D)
-			if . < 0
-				. = . + D + 2
-			end if
-		end if
-		N = N shr n
-		sign = sign xor 1
-	end while
-end struc
-
-
-struc mod_2ⁿp1 val*,n*
-	local D,N,sign
-	D = (1 shl n) - 1
-	N = val
-	sign = 1
-	. = 0
-	while N
-		if sign
-			. = . + (N and D)
-		else ; force positive
-			. = . - (N and D) + D + 2
-		end if
-		N = N shr n
-		sign = sign xor 1
-		if ~ N
-			if . > (D+2)
-				N = .
-				. = 0
-				sign = 1
-			end if
-		end if
-	end while
-end struc
-
-
-IF __source__=__file__;___TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
-
-; need a random number generator, seed with time
-
-
-END IF;____TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST_TEST
