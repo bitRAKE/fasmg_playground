@@ -8,8 +8,7 @@ invoke GetLastError
 invoke FormatMessage,FORMAT_MESSAGE_ALLOCATE_BUFFER\
 \	; always use these two together
 	or FORMAT_MESSAGE_FROM_SYSTEM\
-	or FORMAT_MESSAGE_IGNORE_INSERTS,\
-	0,rax,0,ADDR lpBuffer,0,0
+	or FORMAT_MESSAGE_IGNORE_INSERTS,0,rax,0,ADDR lpBuffer,0,0
 invoke WriteConsole,[hCon],[lpBuffer],eax,0,0
 invoke LocalFree,[lpBuffer]
 invoke ExitProcess,eax
