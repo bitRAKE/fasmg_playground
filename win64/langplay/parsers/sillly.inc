@@ -1,11 +1,25 @@
-struc Δ txt& ; give a label the sizeof its data, and not the sizeof its data type
-	label . : .#_end - .
-	txt
-	.#_end:
-end struc
-
-
-
+; This is a silly language to give examples of different adaptations
+; of popular language mechanics to the basic four state method:
+;
+; comments:
+;		end of line type ';'
+;		inline `text`
+;		block ``text``		(consumes new lines)
+;
+; scoping:
+;		whitespace counting at start of line
+;		keyword: BEGIN/END
+;
+; line continuation (consumes line termination character):
+;	'\' or ','
+;
+; number groups are of the form: 0...(base)
+;	range checking on base and digits
+;
+; letter groups:
+;
+; symbol groups:
+;
 Tokenizer:
 	enter 32,0
 	; assume every token is one byte w/o whitespace! yikes!
@@ -20,7 +34,7 @@ Tokenizer:
 	mov r11,[result_bytes]
 	mov rdi,[result_buffer]
 	add r11,rdi ; memory limit of output
-	call FourState
+	call Sillly
 	sub r11,rdi ; unused bytes
 	sub [result_bytes],r11 ; actual output bytes (not including null byte)
 	xor eax,eax
@@ -31,14 +45,16 @@ Tokenizer:
 
 
 
-
-Silly:
-namespace Silly
+Sillly:
+namespace Sillly
 	mov rbx,tab_UTF8
+
+line:	; reset line flags
+	mov [Line_Scope_Depth],-2
+
+
 ; go from the empty class to the class of first character
-init:
-; reset line flags
-	lodsb
+init:	lodsb
 	xlatb				; byte classes and decoding
 	test al,1100_0000b
 	jz number_start
@@ -105,7 +121,8 @@ other_start:				; ? control class ?
 	call qword [Control_Table+rax*8]
 	jc _error
 	pop rax
-	jmp init
+	jz init
+	jmp line
 _errorX:
 	movzx eax,byte [Control_Table-1]
 	push rax
@@ -120,15 +137,18 @@ _error:
 	rep movsb
 	pop rsi
 	retn
-end namespace ; FourState
+end namespace ; Sillly
 
+
+; NOTE: CF=1 error code on stack
+;	ZF=1 continues line processing
 
 
 EndOfInput:
 	stc
 	retn
 
-LineComment:
+CommentLine:
   @@:	lodsb
 	test al,al
 	jz EndOfInput
@@ -137,41 +157,80 @@ LineComment:
 	cmp al,13
 	jnz @B
   @@:	sub rsi,1
+	ret ; CF = 0 and ZF = 0
 
-IgnoreCtrl:
-	clc
-	retn
+IgnoreControl:
+	xor eax,eax
+	ret ; CF = 0 and ZF = 1
 
-SuperComment:
+CommentSuper:
 	cmp byte [rsi],'`'
 	jz .block
   @@:	lodsb
 	test al,al
 	jz EndOfInput
-	cmp al,10
-	jz EndOfInput
-	cmp al,13
+	cmp al,13 ; FIX: any line terminator
 	jz EndOfInput
 	cmp al,'`'
 	jnz @B
-	clc
-	ret
-
-.block:	mov ah,al
+	ret ; CF = 0 and ZF = 1
+.block:	lodsb ; skip triple ` start by design
+	mov ah,al
 	push rdi
 	push rsi
 	pop rdi
-	repnz scasw
-	xchg rax,rdi
+	mov ecx,dword[] ; length
+	sub ecx,edi	; current
+	sub ecx,dword[] ; start
+@@:	repnz scasb
+	jnz @F
+	scasw ; ?
+;	cmp [rdi],ax
+	sub ecx,2
+	ja @B
+	; skip triple ` end by design
+@@:	xchg rax,rdi
 	pop rdi
-	jnz Silly._error ; end of input reached before closing ``
+	jnz EndOfInput ; end of input reached before closing ``
 ; update RSI
 	clc
-	retn
+	ret ; CF = 0 and ZF = 1
 
 SpaceScoping:
+	; NOTE: would be (-2) if we didn't already have a space
+	cmp [Line_Scope_Depth],-1
+	jz .scope_space
 	clc
 	retn
+.scope_space:
+	xchg rdi,rsi
+	or ecx,-1
+	mov al,' '
+	repz scasb
+	lea rdi,[rdi-1]
+	sub [Line_Scope_Depth],ecx ; scope depth
+	xchg rdi,rsi
+	clc
+	ret ; CF = 0 and ZF = 1
+
+ContinueLine:
+	cmp byte [rsi],13
+	jnz .not_special
+	add rsi,1 ; skip newline
+	; back-slashes are consumed,
+	; but commas are still part of syntax
+	cmp byte [rsi-2],','
+	jnz @F
+	; output comma
+	pop rax
+	pop rax
+	jmp Sillly.init
+@@:	clc
+	retn
+.not_special:
+	pop rax
+	pop rax
+	jmp Sillly.symbol_start
 
 
 
@@ -211,21 +270,23 @@ _display:
 
 
 
-CTRL_ENDOFINPUT		= 0
-CTRL_IGNORE		= 1
-CTRL_LINECOMMENT	= 2
-CTRL_SUPERCOMMENT	= 3
-CTRL_SCOPE		= 4
+CONTROL_ENDOFINPUT	= 0
+CONTROL_IGNORE		= 1
+CONTROL_COMMENTLINE	= 2
+CONTROL_COMMENTSUPER	= 3
+CONTROL_SCOPE		= 4
+CONTROL_CONTINUE	= 5
 
 align 64
 rb 7
 db (sizeof Control_Table) shr 3
 Control_Table Δ dq \
 	EndOfInput,\
-	IgnoreCtrl,
-	LineComment,\
-	SuperComment,\
-	SpaceScoping
+	IgnoreControl,
+	CommentLine,\
+	CommentSuper,\
+	ScopingSpace,\
+	ContinueLine
 
 Error_Table dq \
 	Error_EOI,\
@@ -234,7 +295,7 @@ Error_Table dq \
 	Error_SuperClose,\
 	Error_NoError,\
 	Error_CtlRng
-
+; Unassigned errors can be appropriated where multiple errors are needed for a particular control state.
 
 Error_EOI		Δ db sizeof Error_EOI-1,	'end of input expected'
 Error_NoError		Δ db sizeof Error_NoError-1,	"this doesn't happen"
@@ -246,24 +307,28 @@ Error_CtlRng		Δ db sizeof Error_CtlRng-1,	'unsupported control byte'
 CLASS_NUMBER	= 0000_0000b
 CLASS_LETTER	= 0100_0000b
 CLASS_SYMBOL	= 1000_0000b
-CLASS_CTRL	= 1100_0000b
+CLASS_CONTROL	= 1100_0000b
 
-align 64
+align 64 ; constant
 tab_UTF8:
 repeat 256,i:0
 	match A =i B,: 9 10 11 12 13 :
-		db CTRL_IGNORE or CLASS_CTRL
+		db CONTROL_IGNORE or CLASS_CONTROL
 	else
 	if i > 127
 		db $3F or CLASS_LETTER
 	else if i = 0
-		db CTRL_ENDOFINPUT or CLASS_CTRL
+		db CONTROL_ENDOFINPUT or CLASS_CONTROL
 	else if i = ';'
-		db CTRL_LINECOMMENT or CLASS_CTRL
+		db CONTROL_COMMENTLINE or CLASS_CONTROL
 	else if i = '`'
-		db CTRL_SUPERCOMMENT or CLASS_CTRL
+		db CONTROL_COMMENTSUPER or CLASS_CONTROL
 	else if i = ' '
-		db CTRL_SCOPE or CLASS_CTRL
+		db CONTROL_SCOPE or CLASS_CONTROL
+	else if i = '\'
+		db CONTROL_CONTINUE or CLASS_CONTROL
+	else if i = ','
+		db CONTROL_CONTINUE or CLASS_CONTROL
 	else if (i >= 'A') & (i <= 'Z')
 		db (i-'A'+10) or CLASS_LETTER
 	else if (i >= 'a') & (i <= 'z')
@@ -275,3 +340,15 @@ repeat 256,i:0
 	end if
 	end match
 end repeat
+
+
+
+align 64 ; this space is for parser state information
+
+; total state
+
+; line state
+Line_Scope_Depth rd 1
+
+
+

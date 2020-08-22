@@ -1,10 +1,14 @@
-struc Δ txt& ; give a label the sizeof its data, and not the sizeof its data type
-	label . : .#_end - .
-	txt
-	.#_end:
-end struc
-
-
+; The language defined by this parser is:
+;	input	= token* 0x00
+;	token	= letter | number | symbol | comment | CTRL
+;*	letter	=	[AZaz]+
+;*	number	=	[09]+
+;*	symbol	=	(-([AZaz09]|CTRL))+
+;	comment	=	;* CR
+;	CR	=	0x0D
+;	CTRL	=	[0x09-0x0D]+
+;
+;*these matchers are greedy
 
 Tokenizer:
 	enter 32,0
@@ -44,8 +48,6 @@ CTRL_IGNORE	= 2
 FourState:
 namespace FourState
 	mov rbx,tab_UTF8
-;	mov rsi,[input_buffer] ; utf8 null terminating
-;	mov rdi,[output_buffer]
 ; go from the empty class to the class of first character
 init:	lodsb
 	xlatb				; byte classes and decoding
@@ -71,7 +73,7 @@ symbol_end:				; state termination
 	pop rax
 	js other_start
 	jpe number_start
-letter_start:				; [A-Za-z][0-9A-Za-z]*
+letter_start:
 	lea rdx,[rsi-1]
 letter_more:
 	lodsb
@@ -89,7 +91,7 @@ letter_end:
 	pop rax
 	jpo symbol_start
 	js other_start
-number_start:				; [0-9][0-9A-Za-z]*( '(' [0-9][0-9]? ')' )?
+number_start:
 	lea rdx,[rsi-1]
 number_more:
 	lodsb
@@ -106,7 +108,7 @@ number_end:
 	pop rax
 	jns letter_start
 	jpo symbol_start
-other_start:				; ? control class ?
+other_start:
 	and eax,0x3F
 	cmp byte [Control_Table-1],al
 	jbe _errorX

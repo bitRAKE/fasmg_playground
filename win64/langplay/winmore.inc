@@ -4,6 +4,12 @@ include 'win64wxp.inc'
 
 ; bitRAKE, things not present in base fasmg package
 
+struc Δ txt& ; give a label the sizeof its data, and not the sizeof its data type
+	label . : .#_end - .
+	txt
+	.#_end:
+end struc
+
 HTCAPTION = 2
 
 EM_SETBKGNDCOLOR	= WM_USER+67

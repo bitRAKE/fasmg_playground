@@ -24,8 +24,8 @@ return_TRUE:
 	mov eax,1
 	ret
 
-_WM_CTLCOLORDLG:
 ;_WM_CTLCOLORBTN:
+_WM_CTLCOLORDLG:
 _WM_CTLCOLORSTATIC:
 	invoke SetBkColor,[wP],$5E61D9
 	invoke CreateSolidBrush,$5E61D9
@@ -100,7 +100,7 @@ Why:	invoke InitCommonControlsEx,ADDR iccex
 
 
 ;     CODE CODE CODE CODE CODE CODE CODE CODE CODE CODE CODE CODE CODE CODE CODE
-display "Working on: ",PARSER,13,10
+display "Working on: ",PARSER
 include PARSER ; set on commandline
 ;     DATA DATA DATA DATA DATA DATA DATA DATA DATA DATA DATA DATA DATA DATA DATA
 
@@ -176,4 +176,4 @@ db	'</dependentAssembly>'
 db '</dependency>'
 db '</assembly>'
 endres
-.end Why ; this is where the magic happens
+.end Why ; this is where the magic happens ֎֍⓿⓪∆Ø
