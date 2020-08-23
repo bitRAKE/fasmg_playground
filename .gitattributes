@@ -1,4 +1,5 @@
-*.asm linguist-language=Assembly
-*.inc linguist-language=Assembly
-*.g linguist-language=Assembly
-*.fasm linguist-language=Assembly
+# disable end of line conversion on all files (act responsibly)
+*       -text
+*.inc   linguist-language=Assembly
+*.fasm  linguist-language=Assembly
+*.g     linguist-language=Assembly
