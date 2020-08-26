@@ -6,6 +6,10 @@
 ;		inline `text`
 ;		block ``text``		(consumes new lines)
 ;
+; Two or more '`' are consumed to begin a block comment, and similarly two
+; or more are consumed to end the block comment - the comment must consist
+; of at least one non-'`' character. Comments are a token separator.
+;
 ; scoping:
 ;		whitespace counting at start of line
 ;		keyword: BEGIN/END
@@ -13,7 +17,10 @@
 ; line continuation (consumes line termination character):
 ;	'\' or ','
 ;
-; number groups are of the form: 0...(base)
+; number groups:
+;	form 0...(base)
+;	use subscripts to indicate bases in range [2,36]
+;	₀₁₂₃₄₅₆₇₈₉
 ;	range checking on base and digits
 ;
 ; letter groups:
@@ -50,7 +57,7 @@ namespace Sillly
 	mov rbx,tab_UTF8
 
 line:	; reset line flags
-	mov [Line_Scope_Depth],-2
+	or [Line_Scope_Depth],-1
 
 
 ; go from the empty class to the class of first character
@@ -59,6 +66,49 @@ init:	lodsb
 	test al,1100_0000b
 	jz number_start
 	jns letter_start
+	jpo symbol_start
+	jmp other_start
+
+number_start:				; [0-9][0-9A-Za-z]*( '(' [0-9][0-9]? ')' )?
+	lea rdx,[rsi-1]
+	mov ecx,eax
+number_more:
+	cmp cl,al
+	cmovc ecx,eax			; keep largest digit
+	lodsb
+	xlatb
+	test al,1100_0000b
+	jns number_more
+number_end:
+	push rax
+	pushfq
+	push rcx
+	lea rcx,[rsi-1]
+	mov rax,' number' or ($0D shl 56)
+	call _display
+
+; are there a subscript digits? codepoints [0x2080-0x2089]
+	push 10 ; default base
+	lea rcx,[rsi-1]
+
+	call UTF8__to_UTF32
+	sub eax,$2080
+	jc .under_range
+	cmp eax,10
+	jc .over_range
+	mov dword [rsp],eax
+	call UTF8__to_UTF32
+	sub eax,$2080
+	jc .single_digit_base
+	cmp eax,10
+	jc .single_digit_base
+	imul edx,dword [rsp],10
+	add eax,edx
+
+
+	popfq
+	pop rax
+
 	jpe other_start
 symbol_start: ; punc, math, etc ...	; state initialization
 	lea rdx,[rsi-1]			; preserve name start
@@ -84,7 +134,6 @@ letter_more:
 	lodsb
 	xlatb
 	test al,1100_0000b
-	jpe letter_end
 	jns letter_more
 letter_end:
 	push rax
@@ -94,24 +143,7 @@ letter_end:
 	call _display
 	popfq
 	pop rax
-	jpo symbol_start
-	js other_start
-number_start:				; [0-9][0-9A-Za-z]*( '(' [0-9][0-9]? ')' )?
-	lea rdx,[rsi-1]
-number_more:
-	lodsb
-	xlatb
-	test al,1100_0000b
-	jz number_more
-number_end:
-	push rax
-	pushfq
-	lea rcx,[rsi-1]
-	mov rax,' number' or ($0D shl 56)
-	call _display
-	popfq
-	pop rax
-	jns letter_start
+
 	jpo symbol_start
 other_start:				; ? control class ?
 	and eax,0x3F
@@ -123,6 +155,7 @@ other_start:				; ? control class ?
 	pop rax
 	jz init
 	jmp line
+
 _errorX:
 	movzx eax,byte [Control_Table-1]
 	push rax
@@ -234,6 +267,25 @@ ContinueLine:
 
 
 
+_number_parser:
+	; use heap space to validate number
+
+@@:	stosb	; store converted number digits
+	lodsb
+	xlatb
+	test al,al
+	jns @B
+	cmp byte [rsi-1],'('
+	jnz .default
+
+
+.default:
+	; default base is ten
+	; validate digits
+
+	retn
+
+
 _display:
 	push rax
 
@@ -264,6 +316,34 @@ _display:
 .buffer_full:	; just don't produce more output
 	pop rax
 	retn
+
+
+
+
+; NOTE: assume UTF8 is well-formed, no error checking
+UTF8__CharToUTF32:
+	xor eax,eax
+	lodsb
+	test al,al
+	js .ext
+	retn
+
+.ext:	not al
+	or edx,-1
+	bsr ecx,eax
+	not al
+	shl edx,cl
+	mov ecx,eax
+	and eax,edx
+	shl eax,8
+	shl cl,2
+.go:	lodsb
+	shl al,2
+	shl eax,6
+	shl cl,1
+	jc .go
+	shr eax,8
+	ret
 
 
 .data

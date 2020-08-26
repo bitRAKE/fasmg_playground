@@ -8,9 +8,9 @@ ENDL
 	mov [wP],r8
 	mov [lP],r9
 	iterate message, WM_INITDIALOG,WM_CLOSE,WM_COMMAND,\
-		WM_LBUTTONDOWN,WM_RBUTTONDOWN,WM_RBUTTONUP,WM_SETCURSOR,WM_TIMER,\
+		WM_LBUTTONDOWN,WM_RBUTTONUP,WM_RBUTTONDOWN,WM_SETCURSOR,\
 		WM_CTLCOLORDLG,WM_CTLCOLORSTATIC ;,WM_CTLCOLORBTN,WM_CTLCOLOREDIT
-		cmp word[uMsg],message
+		cmp dx,message
 		jz _#message
 	end iterate
 return_FALSE:
@@ -32,25 +32,27 @@ _WM_CTLCOLORSTATIC:
 	ret ; return the brush
 
 
-_WM_TIMER:
-	mov [preferred_cursor],32646 ; IDC_SIZEALL
-	jmp return_TRUE
-_WM_RBUTTONDOWN:
-	mov [preferred_cursor],32648 ; IDC_NO
-	invoke SetTimer,[hDlg],$55555,$555,0
+_WM_RBUTTONDOWN: ; force cursor when mouse doesn't move
+	mov eax,32648 ; IDC_NO
 	jmp @F
 _WM_SETCURSOR:
 	cmp r8,rcx ; only if mouse is in dialog
-	jz @F
-	mov [preferred_cursor],32646 ; IDC_SIZEALL
-	jmp return_FALSE
-@@:	invoke LoadCursor,0,[preferred_cursor]
+	jnz return_FALSE
+	cmp word [lP],1 ; HTCLIENT
+	jnz return_FALSE
+; if only right mouse button down IDC_NO else IDC_SIZEALL
+	invoke GetKeyState,VK_RBUTTON
+	bt eax,15
+	sbb eax,eax
+	and eax,2 ; IDC_NO - IDC_SIZEALL
+	add eax,32646 ; IDC_SIZEALL
+@@:	invoke LoadCursor,0,eax
 	invoke SetCursor,rax
 	jmp return_TRUE
 _WM_LBUTTONDOWN:
-	mov [preferred_cursor],32646 ; IDC_SIZEALL
-	invoke LoadCursor,0,[preferred_cursor]
-	invoke SetCursor,rax
+; force cursor when mouse doesn't move
+;	invoke LoadCursor,0,32646 ; IDC_SIZEALL
+;	invoke SetCursor,rax
 	invoke PostMessage,[hDlg],WM_NCLBUTTONDOWN,HTCAPTION,[lP]
 	jmp return_TRUE
 _WM_RBUTTONUP:
@@ -176,4 +178,11 @@ db	'</dependentAssembly>'
 db '</dependency>'
 db '</assembly>'
 endres
-.end Why ; this is where the magic happens ֎֍⓿⓪∆Ø
+.end Why ; this is where the magic happens
+
+; Cambria font has wristwatch icon 0x231A, for timing button ⌚
+; 0x23F0-3 are also clocks
+
+
+
+
