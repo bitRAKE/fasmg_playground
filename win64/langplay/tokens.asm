@@ -50,9 +50,6 @@ _WM_SETCURSOR:
 	invoke SetCursor,rax
 	jmp return_TRUE
 _WM_LBUTTONDOWN:
-; force cursor when mouse doesn't move
-;	invoke LoadCursor,0,32646 ; IDC_SIZEALL
-;	invoke SetCursor,rax
 	invoke PostMessage,[hDlg],WM_NCLBUTTONDOWN,HTCAPTION,[lP]
 	jmp return_TRUE
 _WM_RBUTTONUP:
@@ -64,6 +61,9 @@ _WM_CLOSE: ; from taskbar, etc.
 _WM_COMMAND:
 	cmp dword[wP],ID_EDIT_TOKENS or (0x100 shl 16) ; focus control?
 	jnz return_FALSE
+
+	; FIX: check if ID_EDIT_CODE changed from last time, or timeMode set
+
 	invoke SendDlgItemMessageW,[hDlg],ID_EDIT_CODE,EM_GETTEXTLENGTHEX,ADDR gtlex,0
 	test eax,eax ; bytes needed - not including null
 	jz return_TRUE
@@ -109,14 +109,13 @@ include PARSER ; set on commandline
 
 iccex dd 8,$8000FFFF ; 30 window classes registered
 
-preferred_cursor dd 32646 ; IDC_SIZEALL to start
 _msftedit db 'msftedit',0
 
 gtlex GETTEXTLENGTHEX codepage:CP_UTF8,\
 	flags:GTL_NUMBYTES or GTL_PRECISE
 
 gtex GETTEXTEX codepage:CP_UTF8,\
-	flags:GT_DEFAULT
+	flags:GT_RAWTEXT ; GT_DEFAULT
 
 stex SETTEXTEX codepage:CP_UTF8,\
 	flags:ST_DEFAULT

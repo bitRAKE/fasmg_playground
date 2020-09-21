@@ -1,4 +1,4 @@
-include '.\win64\coff.g'
+include '..\.win64\coff.g'
 
 ;Public Interface ##############################################################
 

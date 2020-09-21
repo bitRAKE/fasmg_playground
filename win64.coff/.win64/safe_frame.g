@@ -74,8 +74,8 @@ macro SAFEFRAME?.ENTER? proto*,loco,rego
 				end repeat
 				temp = temp + 1
 				push R
-			else ; skip over return address and parent shadow
-				repeat 1,k:(rego_octets+f+1) shl 3
+			else ; skip over RBP,saved regs,return address and parent shadow
+				repeat 1,k:(rego_octets+f+2) shl 3
 				define A (rbp+k)
 				end repeat
 			end match

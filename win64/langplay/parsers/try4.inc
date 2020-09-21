@@ -69,21 +69,20 @@ init:	mov rbx,tab_UTF8		; do this here to free up RBX sometimes
 
 number_start:				; [09](_|[09AZaz])*[₀₉]*
 	push rsi			; preserve start address for display
+	mov ecx,eax
 number_more:
+	cmp ecx,eax
+	cmovc ecx,eax			; keep largest digit
+number_space:
 	lodsb
 	xlatb
 	test al,1100_0000b
 	jns number_more
+	cmp byte [rsi-1],"_"		; allow spacers inside number
+	jz number_space
 number_end:
-	pop rax
-	push rdi
-	lea rdi,[rsi-1]
-	lea rsi,[rax-1]
-	call UTF8r__Number
-	xchg rsi,rdi
-	pop rdi
-	jmp init
-
+	and ecx,0011_1111b
+	sub rsi,1
 ; validate number:
 ;  - only digits in range of base are checked
 ;  - trailing number space is okay (e.x. 1020_₃)
@@ -96,7 +95,7 @@ number_end:
 	pop rdx ; largest digit in number
 	cmp rdx,rax
 	mov rax,' !ERROR' or ($09 shl 56)
-	jnc @F
+	jc @F
 	mov rax,' number' or ($09 shl 56)
 @@:	pop rdx
 	mov rcx,rsi
@@ -324,6 +323,40 @@ _display:
 
 
 
+; Avoid spending too long on letter strings by pre-check for subscript when
+; first character is a letter in range [AZaz].
+
+UTF8r__CreateNumber:
+; if string starts with a number, but is invalid set CF "error: number digits outside of base range"
+; if number starts with a letter, but is invalid number set ZF and preserve RSI
+.precheck:
+; subscripts are a string of bytes with the high-bit set. So, back up the end pointer and resolve the base first.
+	push rsi
+	mov rsi,rdi
+@@:	sub rsi,1
+	test byte[rsi],$80
+	jnz @B
+	add rsi,1
+	cmp rsi,rdi
+	jnz .try_base
+.letter:
+	pop rsi
+	retn
+.try_base:
+	mov ebx,$2080 ; subscript range base
+	call UTF8__u64_FromDecimalRange
+	jz .letter
+	cmp rsi,rdi
+	jnz .invalid_psuedo_number_base
+	; check digits against base RAX
+
+	retn
+.invalid_psuedo_number_base:
+	xor eax,eax
+	jmp .letter
+
+
+
 ; NOTE: assume UTF8 is well-formed, no error checking
 UTF8__CharToUTF32:
 	xor eax,eax
@@ -349,15 +382,12 @@ UTF8__CharToUTF32:
 	shr eax,8
 	ret
 
-; given a codepoint digit base RBX, convert the number at RSI
-; RSI is only advanced past valid digits, next digit is not in range or remaining digits big integer
+; given a codepoint digit base, convert the number at RSI
+; RSI is only advanced past valid digits, next digit is not in range
 ; ZF set if no number in range present
-; CF set if number exceeds 64-bit
 UTF8__u64_FromDecimalRange:
 	push rbp
 	push rsi
-	; Floor[(2^64 - 10)/10] is the largest value that can advance another digit
-	mov rcx,1844674407370955160
 	xor ebp,ebp
 .next_char:
 	push rsi
@@ -366,110 +396,25 @@ UTF8__u64_FromDecimalRange:
 	jc .rangex
 	cmp eax,10
 	jnc .rangex
-	cmp rcx,rbp
-	jc .overflow
 	pop rdx
+	; FIX: check for number overflow, use CF
 	imul rbp,10
 	add rbp,rax
 	jmp .next_char
 .rangex:
 	pop rsi
 	xchg rax,rbp
-	cmp [rsp],rsi		; were there any digits? ; just use Z flag
-	clc			; didn't overflow
+	; were there any digits?
+	cmp [rsp],rsi
+;	jz .no_number ; just use Z flag
 	pop rdx
 	pop rbp
 	retn
-.overflow:
-	pop rsi			; where to continue translating number
-	xchg rax,rbp		; partial translation
-	pop rdx			; rsi at entry
-	pop rbp			; restore
-	; ZF=0, CF=1, more digits
-	retn
-
-
-UTF8r__CreateNumber:
-; if string starts with a number, but is invalid set CF "error: number digits outside of base range"
-; if number starts with a letter, but is invalid number set ZF and preserve RSI
-
-	; Subscripts are a string of bytes with the high-bit set.
-	; So, back up the end pointer and resolve the base first.
-	push rsi
-	mov rsi,rdi
-@@:	sub rsi,1
-	test byte[rsi],$80
-	jnz @B
-	add rsi,1
-	cmp rsi,rdi
-	jnz .try_base
-.no_base:; no base means we need to try decimal ranges
-	pop rsi
-	push rsi
-	mov ebx,"0" ; ASCII range
-	call UTF8__u64_FromDecimalRange
-	jz .non_number
-	jc .large_decimal_number
-	cmp rsi,rdi
-	jnz .number_error_digits
-
-	; have a decimal number in RAX
-
-.non_number:
-	pop rsi
-	retn
-
-.try_base:
-	mov ebx,$2080 ; subscript range base
-	call UTF8__u64_FromDecimalRange
-	jz .no_base
-	jc .large_base_number
-	cmp rsi,rdi
-	jnz .invalid_base_psuedo_number
-	pop rsi
-	push rsi
-
-	xchg rcx,rax
-	xor eax,eax
-.scan_more:; check digits against base and 
-	cmp rsi,rdi
-	jz .scan_end
-	lodsb
-	xlatb
-	test al,al
-	js .scan_error
-	cmp rax,rcx
-	jc .scan_more
-
-; error: digit outside of base range
-
-.scan_error:; probably not a number
-
-.scan_end:
-	pop rsi
-	retn
-
-.number_error_digits:
-; partial decimal number with something else trailing
-	int3
-
-.large_decimal_number:
-	int3 ; not implemented
-
-.large_base_number:
-	int3 ; not implemented
-
-.invalid_base_psuedo_number:
-; having a subscript in the middle is not technically an error
-	pop rsi
-	xor eax,eax	; assume non-number
-	retn
-
-
 
 .data
 
 
+; :update: refactor iterate on <id,func,error> to create structures
 
 CONTROL_ENDOFINPUT	= 0
 CONTROL_IGNORE		= 1
@@ -503,8 +448,7 @@ Error_NoError		Δ db sizeof Error_NoError-1,	"this doesn't happen"
 Error_SuperClose	Δ db sizeof Error_SuperClose-1,	"comment not closed"
 Error_CtlRng		Δ db sizeof Error_CtlRng-1,	'unsupported control byte'
 
-align 8
-_1844674407370955160 dq 1844674407370955160
+
 
 ; lexical classes
 CLASS_NUMBER	= 0000_0000b
@@ -562,5 +506,14 @@ Keyword_Scope_Depth rd 1
 ;		a. subscript, superscript digits become ASCII digits,
 ;		   not UTF8 codepoints unless they already were.
 ;
+;
+; More general solution for number token would detect subscripts and backtrack;
+; this way, FFFF_FFFF₁₆ would be a valid number and not a letter token. This
+; could be implemented by checking for number at hash map insert. For the sake
+; of readablity this is highly desirable.
+;
+; Also consider implentation of other encodings: Base32 (various forms),
+; Base64, etc. We want an easy to read/use syntax with custom conversion
+; to binary.
 ;
 ;

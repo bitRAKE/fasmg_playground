@@ -1,0 +1,119 @@
+c_math:
+ db 'int(ark ,a ,b ) flt(foh ) vec4(z1 ) mat()',13,10
+ db 'ark = 10*2; a = 3; b = a +5; foh = a + b +2',13,10
+ db 'z1 = a ,b ,foh ,4+ark ',13,10,0
+
+
+All letter tokens are put on the stack.
+
+When "(" get range of last token on stack.
+	- does it match a defined function, no ERROR
+	- start a function stack
+
+When ")" consume tokens from stack, calling function for each.
+
+When "=" start a definition stack for stack token.
+
+
+
+
+
+
+
+; function triggered on ")"
+
+	"int",	Create_Integer,\
+	"flt",	Create_Float,\
+	"vec4",	Create_Vector4,\
+	"mat",	Create_Matrix
+
+Create_Integers:
+	pop rdx
+@@:	pop rcx
+	jrcxz .done
+	; set type of variable RCX
+	jmp @B
+.done:	jmp rdx
+
+
+
+
+; search keyword list for value:
+
+.next:	push rsi
+	push rdi
+	lodsb
+	movzx ecx,al
+	jrcxz .done
+	repz cmpsb
+	pop rdi
+	pop rsi
+	jz .gotit
+	lodsb
+	movzx ecx,al
+	lea rsi,[rsi+rcx+8]
+	jmp .next
+.gotit:	lodsb
+	movzx ecx,al
+	mov rax,[rsi]	; return function pointer
+	retn		; ZF=1,CF=0
+.done:	sub ecx,1	; ZF=0,CF=1
+	retn
+
+
+
+Control_LParen:
+	call FunctionQ
+	jz .okay
+	; error: function "xxx" undefined
+.okay:	retn
+
+
+
+; find first zero qword on stack and work backward
+Control_RParen:
+	push rdi
+	mov rdi,rsp
+	xor eax,eax
+	or ecx,-1
+	rep scasq
+	cmp [RSP_Sentinal],rdi
+	jc .underflow
+	push rdi
+	lea rsi,[rsp+8*3]	; parameter vector
+	call qword [rdi-8*2]	; execute function on array of parameters
+	pop rax
+	pop rdi
+	pop rdx
+	xchg rax,rsp
+	xor eax,eax	;CF=0;ZF=1
+	jmp rdx
+.underflow:
+	pop rdi
+	; display stack
+	; backup and abort
+	stc
+	retn
+
+
+iterate <fun,id>,\
+	Integer,	TYPE_INTEGER,\
+	Float,		TYPE_FLOAT,\
+	Vector4,	TYPE_VECTOR4,\
+	Matrix,		TYPE_MATRIX
+
+	Function_#fun:
+		lea rcx,[Function_#fun]
+		mov edx,id
+		jmp SetType
+end iterate
+
+SetType:
+.more:	lodsq
+	cmp rax,rcx
+	jz .done
+	bts [rax+NODE.type],edx
+;	jc .error_redefined
+	jmp .more
+.done:	retn
+

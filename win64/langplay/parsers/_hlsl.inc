@@ -67,7 +67,7 @@ symbol_end:				; state termination
 	push rax
 	pushfq
 	lea rcx,[rsi-1]
-	mov rax,' symbol,'
+	mov rax,' symbol' or ($0D shl 56)
 	call _display
 	popfq
 	pop rax
@@ -79,13 +79,12 @@ letter_more:
 	lodsb
 	xlatb
 	test al,1100_0000b
-	jpe letter_end
 	jns letter_more
 letter_end:
 	push rax
 	pushfq
 	lea rcx,[rsi-1]
-	mov rax,' letter,'
+	mov rax,' letter' or ($0D shl 56)
 	call _display
 	popfq
 	pop rax
@@ -102,7 +101,7 @@ number_end:
 	push rax
 	pushfq
 	lea rcx,[rsi-1]
-	mov rax,' number,'
+	mov rax,' number' or ($0D shl 56)
 	call _display
 	popfq
 	pop rax
@@ -164,18 +163,19 @@ _display:
 	cmp r11,rax
 	jc .buffer_full
 
-	mov rax,('class:' shl 16) or $200D
+	mov rax,('class:' shl 16) or $090D
 	stosq
 	pop rax
 	stosq
-	mov rax,'  val: "'
+	mov rax,('value: ' shl 8) or $09
 	stosq
+	mov al,'"'
+	stosb
 	; copy data string to output
 	push rsi
 	mov rsi,rdx
 	sub ecx,edx
 	rep movsb
-	mov al,'"'
 	stosb
 	pop rsi
 	retn
@@ -220,7 +220,7 @@ repeat 256,i:0
 		db $3F or CLASS_LETTER
 	else if i = 0
 		db CTRL_ENDOFINPUT or CLASS_CTRL
-	else if i = ';'
+	else if i = '#'
 		db CTRL_LINECOMMENT or CLASS_CTRL
 	else if (i >= 'A') & (i <= 'Z')
 		db (i-'A'+10) or CLASS_LETTER

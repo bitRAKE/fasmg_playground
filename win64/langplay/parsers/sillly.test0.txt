@@ -1,0 +1,17 @@
+one ``this is a block
+comment to say
+a lot of nothing`` two2 123 ; default base
+1020_₃`wow, base three`
+; Triacontakaidecimal or base32hex
+6QP0_C9P6_UTRE_41J6₃₂ ; 80-bit number
+434a ; bad number
+four4\;line continuations only affect scoping, atm
+five5
+
+
+int(ark ,a ,b ) flt(foh ) vec4(z1 ) mat()
+ark = 10*2; a = 3; b = a +5; foh = a + b +2
+z1 = a ,b ,foh ,4+ark
+
+
+
