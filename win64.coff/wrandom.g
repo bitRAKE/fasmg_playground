@@ -2,9 +2,7 @@
 include './.win64/coffms64.g'
 
 section '.drectve' linkinfo linkremove
-db	'/SUBSYSTEM:CONSOLE",6.2" ',	\
-	'/STACK:0,0 ',			\
-	'/HEAP:0,0 '
+db	'/SUBSYSTEM:CONSOLE",6.2" /STACK:0,0 /HEAP:0,0 '
 
 section '.flat' code readable executable align 64
 
@@ -31,7 +29,7 @@ public mainCRTStartup:
 	lea rbp,[rsp+32] ; buffer for random data
 
 	BCRYPT_USE_SYSTEM_PREFERRED_RNG = 2
-@@:	call BCRYPT:BCryptGenRandom,rbx,rbp,8*string_params,BCRYPT_USE_SYSTEM_PREFERRED_RNG
+	call BCRYPT:BCryptGenRandom,rbx,rbp,8*string_params,BCRYPT_USE_SYSTEM_PREFERRED_RNG
 
 	bt [rbp],ebx
 	sbb rax,rax		; 0 | -1

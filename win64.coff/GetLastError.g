@@ -6,9 +6,7 @@ include './.win64/equates/kernel64.inc'
 include './.win64/equates/user64.inc'
 
 section '.drectve' linkinfo linkremove
-db	'/SUBSYSTEM:CONSOLE",6.2" ',	\
-	'/STACK:0,0 ',			\
-	'/HEAP:0,0 '
+db	'/SUBSYSTEM:CONSOLE",6.2" /STACK:0,0 /HEAP:0,0 '
 
 
 
