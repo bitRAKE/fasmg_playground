@@ -1,0 +1,1 @@
+@%comspec% /Q /T:A0 /U /K .vars.cmd

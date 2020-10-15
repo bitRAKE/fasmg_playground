@@ -1,4 +1,4 @@
-include '../.win64/coff.g'
+include '../.win64/coffms64.g'
 
 GENERIC_READ = 0x80000000
 OPEN_EXISTING = 3
@@ -19,21 +19,19 @@ GL_FRAGMENT_SHADER = 0x8B30
 
 
 section '.drectve' linkinfo linkremove
-db	'/SUBSYSTEM:WINDOWS",6" ',\
-	"/STACK:0,0 ",\
-	"/HEAP:0,0 "
+db '/SUBSYSTEM:WINDOWS",6" /STACK:0,0 /HEAP:0,0 '
 
 section '.' code readable writeable executable align 64
 
 public WinMainCRTStartup:
-	safeframe.enter WNDPROC,		<\
-		ShaderCode:QWORD		,\
-		Shader:QWORD			,\
-		hDC:QWORD			,\
-		hFile:QWORD			,\
-		glCreateShaderProgramv:QWORD	,\
-		glDeleteProgram:QWORD		,\
-		glUseProgram:QWORD		>
+frame.enter ,<				\
+	ShaderCode:QWORD,		\
+	Shader:QWORD,			\
+	hDC:QWORD,			\
+	hFile:QWORD,			\
+	glCreateShaderProgramv:QWORD,	\
+	glDeleteProgram:QWORD,		\
+	glUseProgram:QWORD		>
 
 	call KERNEL32:VirtualAlloc,0,64*1024,\
 		MEM_COMMIT or MEM_RESERVE,PAGE_READWRITE
@@ -92,8 +90,8 @@ MainLoop:
 	jns MainLoop
 
 	call KERNEL32:ExitProcess,0
-	safeframe.leave
-	int3
+frame.leave
+int3
 
 _static db 'static',0
 _glCreateShaderProgramv db 'glCreateShaderProgramv',0 ; 4.1

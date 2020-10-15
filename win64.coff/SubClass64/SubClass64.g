@@ -1,4 +1,4 @@
-include '..\.win64\coff.g'
+include '..\.win64\coffms64.g'
 
 extrn DialogProc
 dlgID_EXAMPLE = 37
@@ -7,7 +7,7 @@ section '$' code readable executable align 64
 
 ; use default /ENTRY, just so we don't need to pass more to linker:
 ;	/SUBSYSTEM:WINDOWS	WinMainCRTStartup
-;	/SUBSYSTEM:CONSOLE	mainCRTStartup 
+;	/SUBSYSTEM:CONSOLE	mainCRTStartup
 ;	/DLL			_DllMainCRTStartup
 
 public WinMainCRTStartup: ; default "/ENTRY: "

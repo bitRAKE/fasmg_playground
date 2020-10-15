@@ -1,0 +1,5 @@
+These files serve as constant definitions and not as documentation. Comments should mainly focus on the conversion/adaptation. Look elsewhere to understand the APIs. No attempt is made to support legacy interfaces or unused symbols.
+
+Naming should migrate to parallel MS SDK names.
+
+Presently there is no need to document functions as there is no type or parameter count checking.

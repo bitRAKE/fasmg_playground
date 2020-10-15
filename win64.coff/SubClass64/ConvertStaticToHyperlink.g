@@ -1,4 +1,4 @@
-include '..\.win64\coff.g'
+include '..\.win64\coffms64.g'
 
 ;Public Interface ##############################################################
 
@@ -87,14 +87,15 @@ namespace HyperlinkParentProc
 
 
 _WM_DESTROY:
-	safeframe.enter SUBCLASSPROC
+	frame.enter <hWnd:QWORD,uMsg:QWORD,wParam:QWORD,lParam:QWORD,uIdSubclass:QWORD,dwRefData:QWORD>
 	call COMCTL32:RemoveWindowSubclass,rcx,ADDR HyperlinkParentProc,[uIdSubclass]
-	safeframe.leave
+	frame.leave
 	jmp COMCTL32:DefSubclassProc
 
 
 _WM_CTLCOLORSTATIC: ; hDC, hWndCtrl
-	safeframe.enter SUBCLASSPROC,<result:QWORD>
+	frame.enter <hWnd:QWORD,uMsg:QWORD,wParam:QWORD,lParam:QWORD,uIdSubclass:QWORD,dwRefData:QWORD>,\
+		<result:QWORD>
 	call COMCTL32:DefSubclassProc ;,[hWnd],[uMsg],[wParam],[lParam]
 	mov [result],rax ; save result
 	; lParam	handle of static control
@@ -105,7 +106,7 @@ _WM_CTLCOLORSTATIC: ; hDC, hWndCtrl
 	jrcxz @F
 	call GDI32:SetTextColor,[wParam],rcx
 @@:	mov rax,[result] ; hBrush for background painting
-	safeframe.leave
+	frame.leave
 	retn
 end namespace
 
@@ -130,30 +131,32 @@ namespace HyperlinkProc
 
 _WM_SETCURSOR:
 ; TODO: regular frame is fine
-	safeframe.enter SUBCLASSPROC,<result:QWORD>
+	frame.enter <hWnd:QWORD,uMsg:QWORD,wParam:QWORD,lParam:QWORD,uIdSubclass:QWORD,dwRefData:QWORD>,\
+		<result:QWORD>
 	call COMCTL32:DefSubclassProc ;,[hWnd],[uMsg],[wParam],[lParam]
 	mov [result],rax
 	call USER32:LoadCursorW,0,IDC_HAND
 	call USER32:SetCursor,rax
 	mov rax,[result]
-	safeframe.leave
+	frame.leave
 	retn
 
 
 _WM_DESTROY:
-	safeframe.enter SUBCLASSPROC
+	frame.enter <hWnd:QWORD,uMsg:QWORD,wParam:QWORD,lParam:QWORD,uIdSubclass:QWORD,dwRefData:QWORD>
 	call COMCTL32:RemoveWindowSubclass,[hWnd],ADDR HyperlinkProc,[uIdSubclass]
 	call USER32:RemovePropA,[hWnd],ADDR PROP_COLOR_LINK
 	call USER32:RemovePropA,[hWnd],[uIdSubclass]
 	call USER32:SendMessageW,[hWnd],WM_SETFONT,rax,0
 	call USER32:RemovePropA,[hWnd],[dwRefData]
 	call GDI32:DeleteObject,rax ; hFont underline
-	safeframe.leave
+	frame.leave
 	jmp COMCTL32:DefSubclassProc
 
 
 _WM_MOUSEMOVE:
-	safeframe.enter SUBCLASSPROC,<rt:RECT,pt:POINT>
+	frame.enter <hWnd:QWORD,uMsg:QWORD,wParam:QWORD,lParam:QWORD,uIdSubclass:QWORD,dwRefData:QWORD>,\
+		<rt:RECT,pt:POINT>
 	call USER32:GetCapture
 	cmp rax,[hWnd]
 	jz .use_capture
@@ -179,18 +182,17 @@ _WM_MOUSEMOVE:
 	xchg rax,rcx
 	jrcxz .outside
 
-@@:	safeframe.leave
+@@:	frame.leave
 	jmp COMCTL32:DefSubclassProc
 
 end namespace
 
 
 
-define DUMMYPROTO hParent:QWORD,idCtrl:QWORD
-
 public ConvertStaticToHyperlink:
 namespace ConvertStaticToHyperlink
-	safeframe.enter DUMMYPROTO,<hCtrl:QWORD,hFont:QWORD,lf:LOGFONTW>
+	frame.enter <hParent:QWORD,idCtrl:QWORD>,\
+		<hCtrl:QWORD,hFont:QWORD,lf:LOGFONTW>
 	call USER32:GetDlgItem ;,rcx,rdx
 	mov [hCtrl],rax
 
@@ -211,6 +213,6 @@ namespace ConvertStaticToHyperlink
 	call COMCTL32:SetWindowSubclass,[hCtrl],ADDR HyperlinkProc,\
 		ADDR PROP_FONT_ORIGINAL,ADDR PROP_FONT_UNDERLINE
 
-	safeframe.leave
+	frame.leave
 	retn
 end namespace

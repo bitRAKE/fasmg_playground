@@ -1,4 +1,4 @@
-include '..\.win64\coff.g'
+include '..\.win64\coffms64.g'
 
 WM_CLOSE	= 0010h
 WM_INITDIALOG	= 0110h
@@ -64,5 +64,5 @@ processed:
 	leave
 	mov eax,1
 	retn
-	
+
 end namespace
