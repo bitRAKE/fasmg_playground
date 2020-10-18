@@ -1,0 +1,60 @@
+
+; windef.inc
+; Basic Windows Type Definitions
+
+HFILE_ERROR=-1
+
+struct RECT
+left	rd 1
+top	rd 1
+right	rd 1
+bottom	rd 1
+end struct
+
+struct POINT
+x	rd 1
+y	rd 1
+end struct
+
+struct SIZE
+cx	rd 1
+cy	rd 1
+end struct
+
+
+APP_LOCAL_DEVICE_ID_SIZE=32
+struct APP_LOCAL_DEVICE_ID
+value rb APP_LOCAL_DEVICE_ID_SIZE
+end struct
+
+; mode selections for the device mode function
+DM_UPDATE=1
+DM_COPY=2
+DM_PROMPT=4
+DM_MODIFY=8
+
+DM_OUT_DEFAULT	=DM_UPDATE
+DM_OUT_BUFFER	=DM_COPY
+DM_IN_PROMPT	=DM_PROMPT
+DM_IN_BUFFER	=DM_MODIFY
+
+; device capabilities indices
+iterate N,FIELDS,PAPERS,PAPERSIZE,MINEXTENT,MAXEXTENT,BINS,DUPLEX,SIZE,EXTRA,VERSION,DRIVER,BINNAMES,ENUMRESOLUTIONS,FILEDEPENDENCIES,TRUETYPE,PAPERNAMES,ORIENTATION,COPIES
+DC_#N=%
+end iterate
+
+
+define _DPI_AWARENESS_CONTEXTS_
+
+iterate N,INVALID,UNAWARE,SYSTEM_AWARE,PER_MONITOR_AWARE
+DPI_AWARENESS_#N=%-2
+end iterate
+
+; psuedo-handles (DPI_AWARENESS_CONTEXT)
+iterate N,UNAWARE,SYSTEM_AWARE,PER_MONITOR_AWARE,PER_MONITOR_AWARE_V2,UNAWARE_GDISCALED
+DPI_AWARENESS_CONTEXT_#N=0-%
+end iterate
+
+iterate N,INVALID,DEFAULT,MIXED
+DPI_HOSTING_BEHAVIOR_#N=%-2
+end iterate

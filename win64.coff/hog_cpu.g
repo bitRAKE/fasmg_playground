@@ -83,8 +83,7 @@ frame.enter ,<			\
 		ADDR working,(sizeof working-1)shr 1,0,0
 
 ; flush console buffer so user gets to see message :P
-;	call KERNEL32:FlushConsoleInputBuffer,[hConIn]
-	call KERNEL32:Sleep,1
+	call KERNEL32:Sleep,0 ; seems to work
 
 	call KERNEL32:GetCurrentProcess
 	xchg rcx,rax
@@ -117,6 +116,9 @@ frame.enter ,<			\
 	call KERNEL32:WaitForMultipleObjects,rcx,ADDR .handles,TRUE,-1 ; INFINITE
 .not_any_thread:
 	call KERNEL32:ExitProcess,0
-
-frame.leave
-int3
+	int3
+; although this is needed for frame macros to work correctly, this extra LEAVE
+; instruction never gets executed. Additionally, because [RBP] is undefined we
+; never want to reach here - hence the INT3 above. Correcting the stack could
+; be done, but why bother?
+	frame.leave

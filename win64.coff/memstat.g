@@ -5,6 +5,9 @@ include './.win64/equates/sysinfoapi.inc'
 section '.drectve' linkinfo linkremove
 db	'/SUBSYSTEM:CONSOLE",6.2" /STACK:0,0 /HEAP:0,0 '
 
+; loosly based on:
+; https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/sysinfoapi/nf-sysinfoapi-globalmemorystatusex.md#examples
+
 section '.flat' code readable executable align 64
 
 message db "There is %ld percent of memory in use.", \
