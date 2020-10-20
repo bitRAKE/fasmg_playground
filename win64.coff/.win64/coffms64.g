@@ -3,6 +3,7 @@
 format binary as 'obj'
 
 include './struct.inc'
+include './x64help.g'
 
 struc? TCHAR args:?&
 	. du args

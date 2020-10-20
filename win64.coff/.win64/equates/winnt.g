@@ -2,6 +2,18 @@
 ; winnt.inc
 ; almost 23k lines, slowly to appear here ...
 
+FALSE=0
+TRUE=1
+INFINITE=-1
+
+THREAD_DYNAMIC_CODE_ALLOW	=1	; Opt-out of dynamic code generation.
+
+THREAD_BASE_PRIORITY_LOWRT	=15	; value that gets a thread to LowRealtime-1
+THREAD_BASE_PRIORITY_MAX	=2	; maximum thread base priority boost
+THREAD_BASE_PRIORITY_MIN	=-2	; minimum thread base priority boost
+THREAD_BASE_PRIORITY_IDLE	=-15	; value that gets a thread to idle
+
+
 struct MEMORY_BASIC_INFORMATION32
 BaseAddress rd 1
 AllocationBase rd 1

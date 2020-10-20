@@ -3,7 +3,7 @@ include './.win64/coffms64.g'
 
 ; some constants
 include './.win64/equates/kernel64.inc'
-include './.win64/equates/wincon.inc'
+include './.win64/equates/wincon.g'
 include './.win64/equates/user64.inc'
 
 section '.drectve' linkinfo linkremove
