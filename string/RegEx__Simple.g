@@ -44,16 +44,16 @@ here:	cmp byte [rsi],0
 
 ; match AL*[RSI] at [RDI]
 star:	lodsw			; get wild char and '*'
-	push rsi rdi
+@@:	push rsi rdi
 	call here		; must preserve: RSI RDI AL
 	pop rdi rsi
 	jz _Z
 	cmp byte [rdi],0	; stop at string end
 	jz _1
 	scasb			; advance string
-	jz star			; continue if character match
+	jz @B			; continue if character match
 	cmp al,'.'
-	jz star			; also continue if wild character
+	jz @B			; also continue if wild character
 	retn
 
 end namespace ; RegEx__Simple
