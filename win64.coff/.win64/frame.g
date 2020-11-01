@@ -138,6 +138,15 @@ end macro
 ;retn
 
 
+; The problem with using RBP for parameter space is that stack can't be used
+; through API calls. Ex. it would be nice to do:
+;	sub rsp,BUFFER_SIZE
+;	lea rdi,[rsp + FRAME.MAX_PARAMS shl 3]	; buffer pointer
+; to grab some space, but then during API call parameters >4 get put in the
+; wrong place. If we use RSP relative then everything is preserved.
+
+
+
 
 ; only support constant source types: memory addresses or literals
 macro FRAME?.PARAMS? PP& ; w64 ABI parameter convension

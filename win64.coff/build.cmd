@@ -2,7 +2,7 @@
 for %%G in (%*) do (
 	if not exist %%~nG.exe (
 		if exist %%~nG.rc (
-			rc /nologo %%~nG.rc
+			rc /nologo /v %%~nG.rc
 		)
 		fasmg -v 1 -e 3 %%G
 		if exist %%~nG.res (

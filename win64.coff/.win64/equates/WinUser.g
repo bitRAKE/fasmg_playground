@@ -2,6 +2,9 @@
 ; WinUser.inc
 ; USER procedure declarations, constant definitions and macros
 
+;include 'windef.g'
+
+
 struct MSGBOXPARAMSW
 cbSize			dd ?,?
 hwndOwner		dq ?
@@ -15,6 +18,9 @@ lpfnMsgBoxCallback	dq ?
 dwLanguageId		dd ?,?
 end struct
 
+
+
+include 'WinUser.keyboard.g'
 include 'WinUser.menu.g'
 
 

@@ -1,6 +1,6 @@
 ; coding: utf-8, tab: 8
 include './.win64/coffms64.g'
-include './.win64/equates/sysinfoapi.inc'
+include './.win64/equates/sysinfoapi.g'
 
 section '.drectve' linkinfo linkremove
 db	'/SUBSYSTEM:CONSOLE",6.2" /STACK:0,0 /HEAP:0,0 '

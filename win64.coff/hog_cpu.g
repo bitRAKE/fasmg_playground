@@ -2,9 +2,12 @@
 include './.win64/coffms64.g'
 
 ; some constants
-include './.win64/equates/kernel64.inc'
+include './.win64/equates/winnt.g'
+include './.win64/equates/windef.g'
+include './.win64/equates/WinBase.g'
+include './.win64/equates/WinUser.g'
+include './.win64/equates/sysinfoapi.g'
 include './.win64/equates/wincon.g'
-include './.win64/equates/user64.inc'
 
 section '.drectve' linkinfo linkremove
 db	'/SUBSYSTEM:CONSOLE",6.2" /STACK:0,0 /HEAP:0,0 '

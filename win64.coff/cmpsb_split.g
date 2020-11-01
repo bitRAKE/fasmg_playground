@@ -75,9 +75,8 @@ namespace MyWorkerThread
 		lock add [REG-8],rdx
 	else
 	big:	xor edx,edx
-;		mov ecx,1 shl 31 ; keep this small ;)
+;		mov ecx,1 shl 31 ; keep this small, time crit threads ;)
 or ecx,-1
-;		xor ecx,ecx
 	little:	mov rsi,REG
 		mov rdi,REG
 		cmpsb

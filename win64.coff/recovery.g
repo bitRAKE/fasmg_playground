@@ -2,6 +2,7 @@
 include './.win64/coffms64.g'
 
 ; some constants
+include './.win64/equates/winnt.g'
 include './.win64/equates/WinBase.g'
 include './.win64/equates/wincon.g'
 include './.win64/equates/windef.g'
@@ -13,14 +14,9 @@ include './.win64/equates/CommCtrl.g' ; ~ ProMiNick's version
 section '.drectve' linkinfo linkremove
 db '-SUBSYSTEM:"WINDOWS,6.2" -STACK:0,0 -HEAP:0,0 '
 
-; specify manifest, requireAdministrator,highestAvailable,asInvoker
-;db '-MANIFESTDEPENDENCY:"',"type='Win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595B64144CCF1DF' language='*'",'" '
-;db '-MANIFESTUAC:"',"level='asInvoker' uiAccess='true'",'" '
-;db '-MANIFEST:EMBED '
-
 ; Resource Constants:
 
-DLG_MAIN	=	37
+DLG_MAIN=37
 	ID_EDIT_NOTE	=	31
 	ID_STATUSBAR	=	63
 ; menu items
@@ -29,7 +25,7 @@ ID_FILE_RESTART =	126
 ID_FILE_RECOVER =	125
 ID_FILE_EXIT	=	0
 
-;
+
 
 macro ZEROMEM A*,I*
 	push rdi
@@ -94,9 +90,10 @@ X:	xchg eax,ecx
 end macro
 
 
-
-macro u64__to_WCHAR dest*,source
+macro u64__to_CHAR dest*,source
 	local N,A
+	push rdi
+	lea rdi,[dest]
 	match any,source
 		mov rax,source
 	end match
@@ -108,16 +105,45 @@ N:	xor edx,edx
 	push rdx
 	test rax,rax
 	jnz N
-	lea rdi,[dest]
-A:	pop rax
-	stosw
+	pop rax
+A:	stosb
+	pop rax
 	test eax,eax
 	jnz A
 	sub edi,[rsp]
-	; return bytes written to stringz
+	; return bytes written to string
 	xchg eax,edi
 	pop rdi
+	pop rdi
 end macro
+
+macro u64__to_WCHAR dest*,source
+	local N,A
+	push rdi
+	lea rdi,[dest]
+	match any,source
+		mov rax,source
+	end match
+	push rdi
+	push 0
+N:	xor edx,edx
+	div [_10]
+	add edx,'0'
+	push rdx
+	test rax,rax
+	jnz N
+	pop rax
+A:	stosw
+	pop rax
+	test eax,eax
+	jnz A
+	sub edi,[rsp]
+	; return bytes written to string
+	xchg eax,edi
+	pop rdi
+	pop rdi
+end macro
+
 
 macro WCHAR__to_u64 dest*,chars=rcx,source*,temp=rax
 ; Convert wide-char to unsigned integer and character count, using an auxiliary register.
@@ -438,6 +464,7 @@ public WinMainCRTStartup:
 		argv:QWORD,			\
 		argn:DWORD			>
 
+
 	call KERNEL32:GetSystemTimeAsFileTime,rbp
 
 	call KERNEL32:GetCommandLineW
@@ -471,9 +498,6 @@ public WinMainCRTStartup:
 	nop ; TODO: respond to restart
 
 	jmp .not_restart
-.get_last_error:
-	call KERNEL32:GetLastError
-	jmp .fail
 
 .not_restart:
 	; parse regular command line
@@ -500,9 +524,14 @@ public WinMainCRTStartup:
 	xchg rcx,rax
 	jrcxz .get_last_error
 
-	call USER32:DialogBoxParamW,[g_hInstance],DLG_MAIN,[g_hWndDesktop],ADDR MainDlgProcW
-.fail:
+	call USER32:DialogBoxParamW,[g_hInstance], \
+		DLG_MAIN,[g_hWndDesktop],ADDR MainDlgProcW
+
+	call KERNEL32:FreeLibrary,[hMod_MSFTEDIT] ; might be outstanding threads!
+.get_last_error:
+	call KERNEL32:GetLastError
 	xchg rcx,rax
 	call KERNEL32:ExitProcess,rcx
 	frame.leave
 	int3
+
