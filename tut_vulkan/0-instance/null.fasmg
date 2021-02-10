@@ -1,0 +1,44 @@
+
+; this is the minimal needed to create an instance
+
+include 'win64w.fasmg'
+format PE64 CONSOLE 6.2 at $1_0000
+
+include '..\vulkan-1.fasmg'
+section '.data' data readable writeable
+instance dq ? ; VkInstance
+
+align 8
+create_info VkInstanceCreateInfo sType: VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO
+
+
+
+; ########################################################################
+section '.text' code readable executable
+
+ENTRY $
+mainCRTStartup:
+namespace mainCRTStartup
+	virtual at RBP - FRAME
+		dq ?,?,?,?
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	enter FRAME,0
+
+	lea ecx,[create_info]
+	xor edx,edx
+	lea r8,[instance]
+	call [vkCreateInstance]
+	xchg ecx,eax
+	jrcxz @F
+	int3
+@@:
+	xor ecx,ecx
+	call [ExitProcess]
+
+	int3
+
+end namespace
+
+libraries 'kernel32','vulkan-1' ; import section

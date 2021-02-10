@@ -1,0 +1,162 @@
+include 'win64w.fasmg'
+format PE64 CONSOLE 6.2 at $1_0000
+
+
+include '..\vulkan-1.fasmg'
+; ########################################################################
+section '.data' data readable writeable
+
+hConOut dq ?
+instance dq ? ; VkInstance
+
+ApiVersion dd VK_API_VERSION_1_0 ; initialize instance verion 1.0 patch 0
+
+message Δ db "Queried a Vulkan version %d.%d patch %d.",10,0
+
+_vkEnumerateInstanceVersion db "vkEnumerateInstanceVersion",0
+
+_application db "Instance",0
+_engine db "Vulkan",0
+
+
+align 8
+label instance_layers:8 ; array of strings pointers
+dq .A,0 ; layer ordering is important
+.A db "VK_LAYER_NV_optimus",0
+
+align 8
+label instance_extensions:8 ; array of string pointers
+dq .A,0
+; combines VK_EXT_debug_report and VK_EXT_debug_marker
+.A db "VK_EXT_debug_utils",0
+;.B db "VK_KHR_win32_surface",0
+
+
+align 8
+app_info VkApplicationInfo							\
+	sType:				VK_STRUCTURE_TYPE_APPLICATION_INFO,	\
+	pApplicationName:		_application,				\
+	applicationVersion:		VK_API_VERSION_1_0,			\
+	pEngineName:			_engine,				\
+	engineVersion:			VK_API_VERSION_1_0,			\
+	apiVersion:			VK_HEADER_VERSION_COMPLETE
+
+align 8
+create_info VkInstanceCreateInfo 						\
+	sType:				VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,	\
+	flags:				0,					\
+	pApplicationInfo:		app_info,				\
+	enabledLayerCount:		1,					\
+	ppEnabledLayerNames:		instance_layers,			\
+	enabledExtensionCount:		1,					\
+	ppEnabledExtensionNames:	instance_extensions
+
+align 64
+label buffer:4096
+	rb sizeof buffer
+
+
+
+section '.text' code readable executable
+; vkEnumerateInstanceVersion is supported from Vulkan version 1.1 onward. To support
+; Vulkan 1.0 we get the function address with vkGetInstanceProcAddr, and if a null is
+; returned then instance is 1.0. Making your whole application version independant
+; requires using both vkGetInstanceProcAddr and vkGetDeviceProcAddr throughout and
+; taking different actions based on version support availible - only 1.0 (or minimal
+; supported version) functions can be imported otherwise.
+Vulkan__DisplayVersion:
+namespace Vulkan__DisplayVersion
+	virtual at RBP - FRAME
+		dq ?,?,?,?
+		P5 dq ?
+		P6 dq ?
+
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	push rbx
+	push rdi
+	enter FRAME,0
+
+	xor ecx,ecx ; VK_NULL_HANDLE
+	lea edx,[_vkEnumerateInstanceVersion]
+	call [vkGetInstanceProcAddr]
+	test rax,rax
+	jz got_version
+
+	lea ecx,[ApiVersion]
+	call rax ; vkEnumerateInstanceVersion
+	xchg ecx,eax
+	jrcxz got_version
+	int3 ; this NEVER happens
+got_version:
+	mov eax,[ApiVersion]
+	lea ecx,[buffer]
+	lea edx,[message]
+	mov r8d,eax
+	shr r8d,10+12
+	mov r9d,eax
+	shr r9d,12
+	and r9d,(1 shl 10)-1
+	and eax,(1 shl 12)-1
+	mov [P5],rax
+	call [wsprintfA]
+	cmp eax,sizeof message - 3 ; expected length greater
+	jna fail
+
+	and [P5],0
+	xor r9,r9
+	lea edx,[buffer]
+	xchg r8,rax ; bytes to message
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+fail:
+	leave
+	pop rdi
+	pop rbx
+	retn
+end namespace
+
+
+;###############################################################################
+ENTRY $
+mainCRTStartup:
+namespace mainCRTStartup
+	virtual at RBP - FRAME
+		dq ?,?,?,?
+		P5 dq ?
+		P6 dq ?
+
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	enter FRAME,0
+
+	push STD_OUTPUT_HANDLE
+	pop rcx
+	call [GetStdHandle]
+	mov [hConOut],rax
+
+	call Vulkan__DisplayVersion
+
+	; create highest version instance supported
+	mov eax,[ApiVersion]
+	mov [app_info.apiVersion],eax
+
+	lea ecx,[create_info]
+	xor edx,edx
+	lea r8,[instance]
+	call [vkCreateInstance]
+	xchg ecx,eax
+	jrcxz @F
+
+	int3 ; should be debugging!
+@@:
+	xor ecx,ecx
+	call [ExitProcess]
+
+	int3
+
+end namespace
+;-------------------------------------------------------------------------------
+libraries 'kernel32','user32','vulkan-1' ; import section
