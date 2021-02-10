@@ -1,0 +1,175 @@
+;
+; catching debug messages during vkCreateInstance with VkInstanceCreateInfo.pNext
+;
+;	define debug_type vk_debug_report	; old VK_EXT_debug_report method
+	define debug_type vk_debug_message	; new VK_EXT_debug_utils method
+;
+;-------------------------------------------------------------------------------
+
+include 'win64w.fasmg'
+format PE64 CONSOLE 6.2 at $1_0000
+
+include '..\vulkan-1.fasmg'
+section '.data' data readable writeable
+
+hConOut dq ?
+instance dq ? ; VkInstance
+
+align 8
+create_info VkInstanceCreateInfo \
+	sType: VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, \
+	pNext: debug_type
+
+align 8
+; new VK_EXT_debug_utils method
+vk_debug_message VkDebugUtilsMessengerCreateInfoEXT \
+	sType: VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT, \
+	messageSeverity: 0x1111,	\ ; VkDebugUtilsMessageSeverityFlagsEXT
+	messageType: 111b,		\ ; VkDebugUtilsMessageTypeFlagsEXT
+	pfnUserCallback: debug_message_callback
+
+align 8
+; old VK_EXT_debug_report method (deprecated)
+vk_debug_report VkDebugReportCallbackCreateInfoEXT \
+	sType: VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT, \
+	flags: 0x1F, \ ; VkDebugReportFlagsEXT
+	pfnCallback: debug_report_callback
+
+
+template_message Δ db "message %s (%d): %s",10,0
+
+template_report Δ db "report %d (%s): %s",10,0
+
+align 64
+label buffer:4096
+	rb sizeof buffer
+;-------------------------------------------------------------------------------
+section '.text' code readable executable
+
+
+
+debug_message_callback: ; new VK_EXT_debug_utils method
+namespace debug_message_callback
+; ecx = VkDebugUtilsMessageSeverityFlagBitsEXT,
+; edx = VkDebugUtilsMessageTypeFlagsEXT,
+; r8 = VkDebugUtilsMessengerCallbackDataEXT,
+; r9 = pUserData
+	virtual at r8
+		cb_data VkDebugUtilsMessengerCallbackDataEXT
+	end virtual
+	push rax ; dummy for alignment
+	mov eax,[cb_data.messageIdNumber]
+	push [cb_data.pMessage]
+	push rax
+	push [cb_data.pMessageIdName]
+
+	virtual at RBP - FRAME
+		rq 4
+		P5 rq 1
+		P6 rq 1
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+		dq ?
+		arglist rq 3
+	end virtual
+	enter FRAME,0
+
+	lea ecx,[buffer]
+	lea edx,[template_message]
+	lea r8,[arglist]
+	call [wvsprintfA]
+	cmp eax,sizeof template_message ; expected length greater
+	jna fail
+
+	and [P5],0
+	xor r9,r9
+	lea edx,[buffer]
+	xchg r8,rax ; bytes to message
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+fail:
+	xor eax,eax ; VK_FALSE
+	leave
+	add rsp,8*4
+	retn
+end namespace
+
+
+
+debug_report_callback: ; old VK_EXT_debug_report method (deprecated)
+namespace debug_report_callback
+; ecx = flags
+; edx = objectType
+; r8 = object
+; r9 = location
+; dword messageCode
+; qword pLayerPrefix
+; qword pMessage
+; qword pUserData
+	virtual at RBP - FRAME
+		rq 4
+		P5 rq 1
+		P6 rq 1
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+		rq 6
+		messageCode dd ?,?
+		pLayerPrefix dq ?
+		pMessage dq ?
+		pUserData dq ?
+	end virtual
+	enter FRAME,0
+
+	lea ecx,[buffer]
+	lea edx,[template_report]
+	lea r8,[messageCode] ; lazily, use in place values
+	call [wvsprintfA]
+	cmp eax,sizeof template_report ; expected length greater
+	jna fail
+
+	and [P5],0
+	xor r9,r9
+	lea edx,[buffer]
+	xchg r8,rax ; bytes to message
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+fail:
+	xor eax,eax ; VK_FALSE
+	leave
+	retn
+end namespace
+
+
+
+ENTRY $
+mainCRTStartup:
+namespace mainCRTStartup
+	virtual at RBP - FRAME
+		dq ?,?,?,?
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	enter FRAME,0
+
+	push STD_OUTPUT_HANDLE
+	pop rcx
+	call [GetStdHandle]
+	mov [hConOut],rax
+
+	lea ecx,[create_info]
+	xor edx,edx
+	lea r8,[instance]
+	call [vkCreateInstance]
+	xchg ecx,eax
+	jrcxz @F
+	int3
+@@:
+	xor ecx,ecx
+	call [ExitProcess]
+
+	int3
+
+end namespace
+
+;-------------------------------------------------------------------------------
+libraries 'kernel32','user32','vulkan-1' ; import section
