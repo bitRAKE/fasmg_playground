@@ -1,7 +1,9 @@
 # disable end of line conversion on all files (act responsibly)
 *        -text
-# use lua highlighter, but don't collect stats on language
-*.inc    linguist-language=24 linguist-detectable=false # nasm highlight
-*.fasm   linguist-language=120 linguist-detectable=false # unix assembly highlight
+# don't collect stats on language
+# nasm highlight
+*.inc    linguist-language=24 linguist-detectable=false
+# unix assembly highlight
+*.fasm   linguist-language=120 linguist-detectable=false
 *.fasmg  linguist-language=120 linguist-detectable=false
 *.g      linguist-language=120 linguist-detectable=false
