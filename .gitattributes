@@ -1,9 +1,9 @@
 # disable end of line conversion on all files (act responsibly)
-# don't collect stats on language
-# 24 nasm highlight
-# 120 unix assembly highlight
 *        -text
-*.inc    linguist-language=asm linguist-detectable=false
-*.fasm   linguist-language=asm linguist-detectable=false
+# don't collect stats on language
+# nasm is too much, imho
+# Unix-Assembly is okay
+*.inc    linguist-language=Unix-Assembly linguist-detectable=false
+*.fasm   linguist-language=Unix-Assembly linguist-detectable=false
 *.fasmg  linguist-language=Unix-Assembly linguist-detectable=false
-*.g      linguist-language=asm linguist-detectable=false
+*.g      linguist-language=Unix-Assembly linguist-detectable=false
