@@ -5,5 +5,5 @@
 *.inc    linguist-language=24 linguist-detectable=false
 # unix assembly highlight
 *.fasm   linguist-language=120 linguist-detectable=false
-*.fasmg  linguist-language=120 linguist-detectable=false
+*.fasmg  linguist-language=24 linguist-detectable=false
 *.g      linguist-language=120 linguist-detectable=false
