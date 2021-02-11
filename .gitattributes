@@ -3,7 +3,7 @@
 # 24 nasm highlight
 # 120 unix assembly highlight
 *        -text
-.inc    linguist-language=asm linguist-detectable=false
-.fasm   linguist-language=asm linguist-detectable=false
-.fasmg  linguist-language=asm linguist-detectable=false
-.g      linguist-language=asm linguist-detectable=false
+*.inc    linguist-language=asm linguist-detectable=false
+*.fasm   linguist-language=asm linguist-detectable=false
+*.fasmg  linguist-language=120 linguist-detectable=false
+*.g      linguist-language=asm linguist-detectable=false
