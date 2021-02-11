@@ -7,3 +7,4 @@
 *.fasm   linguist-language=Unix-Assembly
 *.fasmg  linguist-language=Unix-Assembly
 *.g      linguist-language=Unix-Assembly
+*.ginc   linguist-language=Unix-Assembly
