@@ -1,0 +1,244 @@
+
+; enumerate layers and extensions to make a useful request during instance creation
+
+include 'win64w.fasmg'
+format PE64 CONSOLE 6.2 at $1_0000
+
+include '..\vulkan-1.fasmg'
+section '.data' data readable writeable
+
+; both new and deprecated SDK layers:
+_VK_LAYER_KHRONOS_validation db "VK_LAYER_KHRONOS_validation",0
+_VK_LAYER_LUNARG_standard_validation db "VK_LAYER_LUNARG_standard_validation",0
+
+_null_layer	Δ db	"The Vulkan implementation or implicitly enabled layers,",10,\
+			"have the following instance extensions:",10,0
+_some_layer	Δ db	10,"Layer %s has the following instance extensions:",10,0
+_tab_ext	Δ db		9,"%s",10,0
+_no_SDK_layer	Δ db	10,"No SDK layer was found.",10,0
+
+align 8
+hConOut dq ?
+
+align 64
+label buffer:4096
+	rb sizeof buffer
+
+align 64
+label FakeHeap:1 shl 24 ; should be enough for this test ;)
+	rb sizeof FakeHeap
+;
+;
+;
+section '.text' code readable executable
+
+LayerCheck: ; requires RBX auto-grow heap
+namespace LayerCheck
+	virtual at RBP - FRAME
+		rq 4
+	count dd ?,?,?,?
+	FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	push rbx rsi
+	enter FRAME,0
+	push 0 ; can there be zero layers?
+	pop qword [count]
+try_again:
+	lea rcx,[count]
+	xor edx,edx ; get count
+	call [vkEnumerateInstanceLayerProperties] ; Provided by VK_VERSION_1_0
+	xchg ecx,eax
+	jrcxz @F
+	int3
+@@:
+	lea rcx,[count]
+	mov rdx,rbx
+	call [vkEnumerateInstanceLayerProperties] ; Provided by VK_VERSION_1_0
+	cmp eax,VK_INCOMPLETE
+	jz try_again
+	xchg ecx,eax
+	jrcxz @F
+	int3
+@@:
+; are desired layers present?
+; we want:
+;	VK_LAYER_KHRONOS_validation
+; but will accept the old SDK layer:
+;	VK_LAYER_LUNARG_standard_validation
+	virtual at RBX
+		layerprops VkLayerProperties
+	end virtual
+	jmp first
+more:
+	lea ecx,[_VK_LAYER_KHRONOS_validation]
+	lea rdx,[layerprops.layerName]
+	call [lstrcmpA] ; works okay for two UTF-8 strings
+	lea ecx,[_VK_LAYER_KHRONOS_validation]
+	xchg ecx,eax
+	jrcxz got_sdk
+
+	lea ecx,[_VK_LAYER_LUNARG_standard_validation]
+	lea rdx,[layerprops.layerName]
+	call [lstrcmpA] ; works okay for two UTF-8 strings
+	lea ecx,[_VK_LAYER_LUNARG_standard_validation]
+	xchg ecx,eax
+	jrcxz got_sdk
+
+	add ebx,sizeof VkLayerProperties
+first:
+	sub [count],1
+	jns more
+	; sign flag = Error: SDK not installed
+	jmp got_nothing
+
+; return the layer we found, so it can be put in create_info structure
+got_sdk:
+	test ecx,ecx ; clear sign flag, no error
+got_nothing:
+	leave
+	pop rsi rbx ; restore heap pointer
+	retn
+end namespace ; LayerCheck
+
+
+
+DisplayInstanceExtensions: ; requires RBX auto-grow heap
+namespace DisplayInstanceExtensions
+	virtual at RBP - FRAME
+		rq 4
+	P5	dq ?
+
+	count dd ?,?
+	layer dq ?
+	arglist dq ?
+	FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	push rbx rsi
+	enter FRAME,0
+	mov [layer],rax ; save input layer for reuse
+
+try_again:
+	mov rcx,[layer]
+	lea rdx,[count] ; value doesn't matter, going to be overwritten
+	xor r8,r8 ; must be zero to get count
+	call [vkEnumerateInstanceExtensionProperties] ; Provided by VK_VERSION_1_0
+	; VK_SUCCESS on getting count
+	xchg ecx,eax
+	jrcxz @F
+	int3
+@@:	; this works if there are zero extensions
+	mov rcx,[layer]
+	lea rdx,[count]
+	mov r8,rbx ; memory buffer, array of VkExtensionProperties
+	call [vkEnumerateInstanceExtensionProperties] ; Provided by VK_VERSION_1_0
+	cmp eax,VK_INCOMPLETE
+	jz try_again
+	xchg ecx,eax
+	jrcxz @F
+	int3
+@@:
+	virtual at RBX
+		layerprops VkExtensionProperties
+	end virtual
+	mov [arglist],rbx
+	jmp first
+more:
+	; just display the instance extensions for selected layer:
+
+	lea ecx,[buffer]
+	lea edx,[_tab_ext]
+	lea r8,[arglist]
+	call [wvsprintfA]
+	cmp eax,sizeof _tab_ext
+	jna @F
+
+	and [P5],0
+	xor r9,r9
+	lea edx,[buffer]
+	xchg r8,rax ; bytes to message
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+@@:
+	add dword [arglist],sizeof VkExtensionProperties
+first:
+	sub [count],1
+	jns more
+
+	leave
+	pop rsi rbx
+	retn
+end namespace ; DisplayInstanceExtensions
+;
+;
+;
+ENTRY $
+mainCRTStartup:
+namespace mainCRTStartup
+	virtual at RBP - FRAME
+		rq 4
+	P5	rq 1
+	arglist	rq 1
+		FRAME := $ - $$
+		assert (FRAME and 15) = 0 ; frame must be MOD 16
+	end virtual
+	enter FRAME,0
+	lea ebx,[FakeHeap] ; global for this thread
+
+	push STD_OUTPUT_HANDLE
+	pop rcx
+	call [GetStdHandle]
+	mov [hConOut],rax
+
+	and [P5],0
+	xor r9,r9
+	lea edx,[_null_layer]
+	mov r8d,sizeof _null_layer
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+
+	xor eax,eax ; query implicit layer extensions
+	call DisplayInstanceExtensions
+
+	; try to find SDK layer
+	call LayerCheck
+	js no_layers
+
+	; write pointer into create_info structure
+	mov [arglist],rax
+
+	lea ecx,[buffer]
+	lea edx,[_some_layer]
+	lea r8,[arglist]
+	call [wvsprintfA]
+	cmp eax,sizeof _some_layer
+	jna @F
+
+	and [P5],0
+	xor r9,r9
+	lea edx,[buffer]
+	xchg r8,rax ; bytes to message
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+@@:
+	; query extensions that are a part of selected layer
+	mov rax,[arglist]
+	call DisplayInstanceExtensions
+	jmp @F
+
+no_layers:
+	and [P5],0
+	xor r9,r9
+	lea edx,[_no_SDK_layer]
+	mov r8d,sizeof _no_SDK_layer
+	mov rcx,[hConOut]
+	call [WriteConsoleA]
+@@:
+	xor ecx,ecx
+	call [ExitProcess]
+	int3
+
+end namespace
+
+libraries 'kernel32','user32','vulkan-1' ; import section
