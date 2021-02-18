@@ -1,0 +1,179 @@
+;
+; SUPRKISS64 based on Usenet posting by George Marsaglia, 2009 Nov 3, period
+; 5 * 2^1320480 * (2^64 - 1). Seeding Q outside of init is advised if greater
+; randomness is needed.
+;
+; Functions:
+;	init *CTX	base known state on Marsaglia's test conditions
+;	next *CTX	get 64-bit psuedo-random bits in RAX
+;	refill *CTX	update context
+;
+if __source__<>__file__ ; FYI: assembly of this file builds test case!
+define superkiss64
+namespace superkiss64
+
+Q_MAX := 20632
+
+struct CTX ; note: size is 32 (MOD 64) bytes
+	index	dd ?,? ; [0,Q_MAX) or refill
+	xcng	dq ? ; 12367890123456
+	xs	dq ? ; 521288629546311
+	carry	dq ? ; 36243678541
+; when structure defined address space is unknown - need to use full syntax of value for Q_MAX
+	Q	rq superkiss64.Q_MAX
+ends ; CTX
+
+virtual at RCX ; alias for <this> pointer, change based on your use
+	ctx CTX
+end virtual
+;
+;
+align 16
+refill:
+	push rbx
+	xor edx,edx
+	mov rbx,[ctx.carry]
+	mov [ctx.index],edx
+@@:	mov rax,[ctx.Q+rdx*8]
+	add edx,1
+	mov r8,rax
+	mov r9,rax
+	shl r8,41
+	shl r9,39
+
+	shr r8,1
+	shr r9,1
+	shr rbx,1
+	pushfq
+	lea r8,[r8+rbx]
+	lea r8,[r8+r9] ; z
+
+	mov rbx,rax
+	shr rbx,23
+	shr rax,25
+	popfq
+	adc r8,r8 ; ~Q[i]
+	adc rbx,rax ; carry
+	not r8
+	mov [ctx.Q+rdx*8-8],r8
+	cmp edx,Q_MAX
+	jnz @B
+	mov [ctx.carry],rbx
+	pop rbx
+
+; fall through to get value:
+
+next:	mov edx,[ctx.index]
+	add [ctx.index],1
+	cmp edx,Q_MAX
+	jnc refill
+
+	mov rax,6906969069
+	imul rax,[ctx.xcng]
+	add rax,123
+
+	mov r8,[ctx.xs]
+	mov r9,r8
+	shl r8,13
+	xor r8,r9
+	mov r9,r8
+	shr r8,17
+	xor r8,r9
+	mov r9,r8
+	shl r8,43
+	xor r8,r9
+
+	; combine three generators
+	mov [ctx.xcng],rax
+	mov [ctx.xs],r8
+	add rax,[ctx.Q + rdx*8]
+	add rax,r8
+	retn
+;
+;
+align 16
+init:
+	push rbx rsi rdi
+	xor edx,edx
+	mov rdi,521288629546311
+	mov rsi,12367890123456
+	mov rbx,6906969069
+@@:
+	add edx,1
+
+	mov rax,rdi
+	shl rdi,13
+	xor rdi,rax
+	mov rax,rdi
+	shr rdi,17
+	xor rdi,rax
+	mov rax,rdi
+	shl rdi,43
+	xor rdi,rax
+
+	imul rsi,rbx
+	add rsi,123
+
+	lea rax,[rsi+rdi]
+	mov [ctx.Q + 8*rdx - 8],rax
+	cmp edx,Q_MAX
+	jc @B
+	mov rax,36243678541
+	mov [ctx.index],edx ; Q array ready for reset
+	mov [ctx.xs],rdi
+	mov [ctx.xcng],rsi
+	mov [ctx.carry],rax
+	pop rdi rsi rbx
+	retn
+;
+;
+end namespace
+else;-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST
+include 'win64w.fasmg'
+format PE64 CONSOLE 6.2 at 0x1_0000
+section '.flat' code readable executable writeable
+include '.\superkiss64.fasmg' ; dot dir changes name to bypass 'if' at start
+
+message Δ db "FAIL: superkiss64 PRNG test (", __source__ ,")",10
+
+⬜: entry ⬜
+namespace ⬜
+virtual at RBP - FRAME
+		dq ?,?,?,?
+	P4	dq ?
+	P5	dq ?
+	FRAME := $ - $$
+	assert (FRAME and 15) = 0 ; frame must be MOD 16
+end virtual
+	enter FRAME,0
+	lea rcx,[ctx]		; PRNG context
+	call superkiss64.init
+	mov dword [rcx-4],10_0000_0000
+check:
+	call superkiss64.next
+	sub dword[rcx-4],1
+	jnz check
+	mov rdx,4013566000157423768
+	cmp rax,rdx
+	jnz fail
+pass:	mov dword[message],"pass"
+fail:	push STD_OUTPUT_HANDLE
+	pop rcx
+	call [GetStdHandle]
+	push sizeof message
+	xor r9,r9
+	mov [P4],r9
+	pop r8
+	lea edx,[message]
+	xchg rcx,rax
+	call [WriteConsoleA]
+	leave
+	retn
+end namespace
+
+dd ? ; space for count
+align 64
+ctx superkiss64.CTX ; PRNG context
+
+libraries 'kernel32' ; import section
+end if;EST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST-TEST
