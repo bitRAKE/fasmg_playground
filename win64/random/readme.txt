@@ -43,3 +43,6 @@ REFERENCES:
 Compendium of PRNG variations
 https://github.com/eddelbuettel/dieharder/tree/master/libdieharder
 https://arvid.io/2018/07/02/better-cxx-prng/
+
+Using randomness to solve problems:
+https://arxiv.org/abs/2007.10254
