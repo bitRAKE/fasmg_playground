@@ -33,8 +33,9 @@ A. Dependant on use. That is why so many exist.
 Q. Why use such exotic PRNG's?
 A. Some problems spaces would colapse to a smaller sub-region when the input is of a low dimension. Examples, include monte-carlo methods.
 
-Q.
-A.
+Q. Why aren't my random numbers distributed evenly?
+A. Because it's random. You want to smooth the number within your domain (a relaxation),
+or look at https://wikipedia.org/wiki/Low-discrepancy_sequence
 
 
 
