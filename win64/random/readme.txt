@@ -31,7 +31,7 @@ Q. Which PRNG should I use?
 A. Dependant on use. That is why so many exist.
 
 Q. Why use such exotic PRNG's?
-A. Some problems spaces would colapse to a smaller sub-region when the input is of a low dimension. Examples, include monte-carlo methods.
+A. Some problems spaces would colapse to a smaller sub-region when the input is of a low dimension.
 
 Q. Why aren't my random numbers distributed evenly?
 A. Because it's random. You want to smooth the number within your domain (a relaxation),
@@ -46,4 +46,5 @@ https://github.com/eddelbuettel/dieharder/tree/master/libdieharder
 https://arvid.io/2018/07/02/better-cxx-prng/
 
 Using randomness to solve problems:
+https://en.wikipedia.org/wiki/Monte_Carlo_method
 https://arxiv.org/abs/2007.10254
