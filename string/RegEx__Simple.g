@@ -8,12 +8,13 @@
 ;	.	matches any single character
 ;	*	matches zero or more occurrences of the previous character
 ;	c	matches any literal character c
-RegEx__Simple:
-namespace RegEx__Simple
+RegEx__Glob:
+namespace RegEx__Glob
 ; RSI: pattern to match
 ; RDI: string to search
 	cmp byte [rsi],'^'
 	jz start
+
 more:	push rsi rdi
 	call here
 	pop rdi rsi
@@ -22,13 +23,19 @@ more:	push rsi rdi
 	scasb		; iterate through input text until zero
 	jnz more
 _1:	or al,1		; ~Z, not found
-_Z:	retn		; Z, found match, RDI start of match, RSI unchanged
+_Z:	retn		; Z, found match, RDI start of match
 
 term:	cmp byte [rdi],0	; Z flag if input text terminates
 	retn
 
 start:	lodsb			; skip '^'
-here:	cmp byte [rsi],0
+	push rdi
+	call here
+	pop rdi
+	retn
+
+here:	mov rdx,rdi		; end address of match, for possible return
+	cmp byte [rsi],0
 	jz _Z
 	cmp word [rsi],'$'
 	jz term
@@ -56,4 +63,4 @@ star:	lodsw			; get wild char and '*'
 	jz @B			; also continue if wild character
 	retn
 
-end namespace ; RegEx__Simple
+end namespace ; RegEx__Glob
